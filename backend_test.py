@@ -846,9 +846,11 @@ class TacticalGearAPITester:
             self.log_test("Stock Filter (Out of Stock)", False, f"Error: {str(e)}")
         
         return tests_passed == total_tests
-        """Run all API tests"""
-        print("🚀 Starting Tactical Gear E-commerce Backend API Tests")
-        print("=" * 60)
+    
+    def run_all_tests(self):
+        """Run all API tests including new features"""
+        print("🚀 Starting Enhanced Tactical Gear E-commerce Backend API Tests")
+        print("=" * 70)
         
         # Test 1: Health check
         health_ok = self.test_health_check()
@@ -866,6 +868,9 @@ class TacticalGearAPITester:
         
         # Wait a moment for data to be fully initialized
         time.sleep(2)
+        
+        print("\n🔍 Testing Original Features...")
+        print("-" * 40)
         
         # Test 3: Categories
         categories_ok = self.test_get_categories()
@@ -885,25 +890,64 @@ class TacticalGearAPITester:
         # Test 8: Individual product
         individual_ok = self.test_individual_product()
         
+        print("\n🆕 Testing New Enhanced Features...")
+        print("-" * 40)
+        
+        # Test 9: Dealer Authentication System
+        dealer_auth_ok = self.test_dealer_authentication_flow()
+        
+        # Test 10: Shopping Cart & Order Management
+        cart_ok = self.test_shopping_cart_flow()
+        
+        # Test 11: Enhanced Filtering with Counts
+        enhanced_filtering_ok = self.test_enhanced_filtering()
+        
         # Summary
-        print("\n" + "=" * 60)
-        print("📊 TEST SUMMARY")
-        print("=" * 60)
+        print("\n" + "=" * 70)
+        print("📊 COMPREHENSIVE TEST SUMMARY")
+        print("=" * 70)
         
-        passed_tests = sum([health_ok, init_ok, categories_ok, brands_ok, products_ok, filtering_ok, specialized_ok, individual_ok])
-        total_tests = 8
+        original_tests = [health_ok, init_ok, categories_ok, brands_ok, products_ok, filtering_ok, specialized_ok, individual_ok]
+        new_tests = [dealer_auth_ok, cart_ok, enhanced_filtering_ok]
+        all_tests = original_tests + new_tests
         
+        passed_tests = sum(all_tests)
+        total_tests = len(all_tests)
+        
+        print("\n📋 Original Features:")
+        original_names = ["Health Check", "Data Initialization", "Categories API", "Brands API", "Products API", "Product Filtering", "Specialized Endpoints", "Individual Product"]
+        for i, (name, result) in enumerate(zip(original_names, original_tests)):
+            status = "✅" if result else "❌"
+            print(f"  {status} {name}")
+        
+        print("\n🆕 New Enhanced Features:")
+        new_names = ["Dealer Authentication", "Shopping Cart & Orders", "Enhanced Filtering"]
+        for i, (name, result) in enumerate(zip(new_names, new_tests)):
+            status = "✅" if result else "❌"
+            print(f"  {status} {name}")
+        
+        print(f"\n🎯 Overall Result: {passed_tests}/{total_tests} test suites passed")
+        
+        # Detailed results
+        print(f"\n📝 Detailed Test Results:")
         for result in self.test_results:
             status = "✅" if result["success"] else "❌"
-            print(f"{status} {result['test']}")
-        
-        print(f"\n🎯 Overall Result: {passed_tests}/{total_tests} tests passed")
+            print(f"  {status} {result['test']}")
         
         if passed_tests == total_tests:
-            print("🎉 All tests passed! Tactical Gear API is working correctly.")
+            print("\n🎉 All tests passed! Enhanced Tactical Gear API is working correctly.")
+            print("✨ New features (Dealer Auth, Shopping Cart, Enhanced Filtering) are fully functional!")
             return True
         else:
-            print(f"⚠️  {total_tests - passed_tests} tests failed. Check the details above.")
+            failed_count = total_tests - passed_tests
+            print(f"\n⚠️  {failed_count} test suite(s) failed. Check the details above.")
+            
+            # Show which categories failed
+            if not all(original_tests):
+                print("❌ Some original features have issues")
+            if not all(new_tests):
+                print("❌ Some new enhanced features have issues")
+            
             return False
 
 if __name__ == "__main__":
