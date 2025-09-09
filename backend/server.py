@@ -583,13 +583,17 @@ async def get_cart(session_id: str):
     for item in cart["items"]:
         product = await db.products.find_one({"id": item["product_id"]})
         if product:
+            # Remove MongoDB _id field to avoid serialization issues
+            product_dict = {k: v for k, v in product.items() if k != "_id"}
             enriched_items.append({
                 **item,
-                "product": Product(**product)
+                "product": Product(**product_dict)
             })
     
-    cart["items"] = enriched_items
-    return cart
+    # Remove MongoDB _id field from cart
+    cart_dict = {k: v for k, v in cart.items() if k != "_id"}
+    cart_dict["items"] = enriched_items
+    return cart_dict
 
 @api_router.delete("/cart/{session_id}/item/{product_id}")
 async def remove_from_cart(session_id: str, product_id: str):
