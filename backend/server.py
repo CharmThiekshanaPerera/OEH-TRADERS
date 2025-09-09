@@ -542,7 +542,8 @@ async def add_to_cart(request: AddToCartRequest):
         cart = Cart(session_id=request.session_id, items=[])
         cart_dict = cart.dict()
     else:
-        cart_dict = cart
+        # Remove MongoDB _id field
+        cart_dict = {k: v for k, v in cart.items() if k != "_id"}
     
     # Check if item already in cart
     item_found = False
