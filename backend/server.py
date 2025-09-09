@@ -180,6 +180,8 @@ async def initialize_sample_data():
             "image_url": "https://images.unsplash.com/photo-1705564667318-923901fb916a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHwyfHx0YWN0aWNhbCUyMGdlYXJ8ZW58MHx8fHwxNzU3Mzc1OTk5fDA&ixlib=rb-4.1.0&q=85",
             "rating": 4.6,
             "review_count": 89,
+            "in_stock": True,
+            "stock_quantity": 50,
             "features": ["Waterproof", "Slip-Resistant Sole", "Breathable Lining", "Reinforced Toe"],
             "tags": ["boots", "tactical", "waterproof", "military"],
             "specifications": {"Material": "Full-grain leather", "Height": "8 inches", "Weight": "2.5 lbs per pair"}
