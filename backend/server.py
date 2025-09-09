@@ -602,11 +602,13 @@ async def remove_from_cart(session_id: str, product_id: str):
     if not cart:
         raise HTTPException(status_code=404, detail="Cart not found")
     
-    cart["items"] = [item for item in cart["items"] if item["product_id"] != product_id]
-    cart["total"] = sum(item["quantity"] * item["price"] for item in cart["items"])
-    cart["updated_at"] = datetime.now(timezone.utc)
+    # Remove MongoDB _id field
+    cart_dict = {k: v for k, v in cart.items() if k != "_id"}
+    cart_dict["items"] = [item for item in cart_dict["items"] if item["product_id"] != product_id]
+    cart_dict["total"] = sum(item["quantity"] * item["price"] for item in cart_dict["items"])
+    cart_dict["updated_at"] = datetime.now(timezone.utc)
     
-    await db.carts.replace_one({"session_id": session_id}, cart)
+    await db.carts.replace_one({"session_id": session_id}, cart_dict)
     return {"message": "Item removed from cart"}
 
 @api_router.post("/orders")
