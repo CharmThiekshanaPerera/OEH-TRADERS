@@ -672,7 +672,9 @@ async def get_categories_with_counts():
     categories_with_counts = []
     for category in categories:
         count = await db.products.count_documents({"category": category["name"]})
-        categories_with_counts.append(CategoryWithCount(**category, product_count=count))
+        category_dict = {k: v for k, v in category.items() if k != "_id"}
+        category_dict["product_count"] = count
+        categories_with_counts.append(CategoryWithCount(**category_dict))
     
     return categories_with_counts
 
