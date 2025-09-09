@@ -186,7 +186,9 @@ class TacticalGearAPITester:
         # Test category filtering
         total_tests += 1
         try:
-            response = self.session.get(f"{self.base_url}/products?category=Body Armor & Protection")
+            import urllib.parse
+            category_name = urllib.parse.quote("Body Armor & Protection")
+            response = self.session.get(f"{self.base_url}/products?category={category_name}")
             if response.status_code == 200:
                 products = response.json()
                 if isinstance(products, list) and len(products) >= 1:
