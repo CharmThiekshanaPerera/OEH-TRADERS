@@ -480,10 +480,15 @@ async def register_dealer(dealer_data: DealerCreate):
     
     # Create new dealer
     dealer_dict = dealer_data.dict()
-    dealer_dict["password"] = hash_password(dealer_data.password)
-    dealer = Dealer(**dealer_dict)
+    hashed_password = hash_password(dealer_data.password)
+    dealer_dict["password"] = hashed_password
+    dealer = Dealer(**{k: v for k, v in dealer_dict.items() if k != "password"})
     
-    await db.dealers.insert_one(dealer.dict())
+    # Store with password
+    dealer_with_password = dealer.dict()
+    dealer_with_password["password"] = hashed_password
+    
+    await db.dealers.insert_one(dealer_with_password)
     
     return {"message": "Dealer registration successful. Awaiting approval."}
 
