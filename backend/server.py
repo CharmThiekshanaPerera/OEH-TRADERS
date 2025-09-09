@@ -687,7 +687,9 @@ async def get_brands_with_counts():
     brands_with_counts = []
     for brand in brands:
         count = await db.products.count_documents({"brand": brand["name"]})
-        brands_with_counts.append(BrandWithCount(**brand, product_count=count))
+        brand_dict = {k: v for k, v in brand.items() if k != "_id"}
+        brand_dict["product_count"] = count
+        brands_with_counts.append(BrandWithCount(**brand_dict))
     
     return brands_with_counts
 
