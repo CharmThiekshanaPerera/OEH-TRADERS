@@ -5,6 +5,7 @@ import json
 import sys
 from typing import Dict, List, Any
 import time
+import uuid
 
 # Backend URL from frontend/.env
 BACKEND_URL = "https://gearup-tactical.preview.emergentagent.com/api"
@@ -14,6 +15,8 @@ class TacticalGearAPITester:
         self.base_url = BACKEND_URL
         self.session = requests.Session()
         self.test_results = []
+        self.dealer_token = None
+        self.test_session_id = str(uuid.uuid4())
         
     def log_test(self, test_name: str, success: bool, message: str, details: Any = None):
         """Log test results"""
