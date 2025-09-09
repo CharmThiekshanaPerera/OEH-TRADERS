@@ -345,12 +345,13 @@ class TacticalGearAPITester:
                 products = response.json()
                 if isinstance(products, list) and len(products) >= 1:
                     # Check if all products have original_price
-                    has_deals = all("original_price" in prod and prod["original_price"] is not None for prod in products)
+                    has_deals = all("original_price" in prod and prod["original_price"] is not None and prod["original_price"] > 0 for prod in products)
                     if has_deals:
                         self.log_test("Deal Products", True, f"Found {len(products)} products on sale")
                         tests_passed += 1
                     else:
-                        self.log_test("Deal Products", False, "Products don't have original_price (not on sale)")
+                        original_prices = [(prod.get("original_price"), prod.get("name", "Unknown")) for prod in products[:3]]
+                        self.log_test("Deal Products", False, f"Products don't have valid original_price. Sample: {original_prices}")
                 else:
                     self.log_test("Deal Products", False, f"Expected deal products, got {len(products) if isinstance(products, list) else 'invalid response'}")
             else:
