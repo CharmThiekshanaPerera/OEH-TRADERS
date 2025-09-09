@@ -360,21 +360,6 @@ async def get_brands():
     brands = await db.brands.find().to_list(length=None)
     return [Brand(**brand) for brand in brands]
 
-@api_router.get("/products/featured", response_model=List[Product])
-async def get_featured_products():
-    products = await db.products.find({"rating": {"$gte": 4.7}}).limit(8).to_list(length=None)
-    return [Product(**product) for product in products]
-
-@api_router.get("/products/trending", response_model=List[Product])
-async def get_trending_products():
-    products = await db.products.find({"review_count": {"$gte": 100}}).limit(6).to_list(length=None)
-    return [Product(**product) for product in products]
-
-@api_router.get("/products/deals", response_model=List[Product])
-async def get_deals():
-    products = await db.products.find({"original_price": {"$exists": True}}).limit(6).to_list(length=None)
-    return [Product(**product) for product in products]
-
 # Original status endpoints
 class StatusCheck(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
