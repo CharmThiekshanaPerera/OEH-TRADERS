@@ -340,7 +340,7 @@ async def get_trending_products():
 
 @api_router.get("/products/deals", response_model=List[Product])
 async def get_deals():
-    products = await db.products.find({"original_price": {"$exists": True}}).limit(6).to_list(length=None)
+    products = await db.products.find({"original_price": {"$exists": True, "$ne": None}}).limit(6).to_list(length=None)
     return [Product(**product) for product in products]
 
 @api_router.get("/products/{product_id}", response_model=Product)
