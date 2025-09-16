@@ -17,6 +17,8 @@ class TacticalGearAPITester:
         self.test_results = []
         self.dealer_token = None
         self.user_token = None
+        self.admin_token = None
+        self.support_token = None
         self.test_user_id = None
         self.test_session_id = str(uuid.uuid4())
         
