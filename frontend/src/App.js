@@ -1539,14 +1539,14 @@ const DealerLogin = () => {
 
     try {
       if (isLogin) {
-        const result = await login(formData.email, formData.password);
+        const result = await loginDealer(formData.email, formData.password);
         if (result.success) {
           navigate('/');
         } else {
           setMessage(result.error);
         }
       } else {
-        const result = await register(formData);
+        const result = await registerDealer(formData);
         if (result.success) {
           setMessage('Registration successful! Please wait for approval.');
           setIsLogin(true);
