@@ -480,14 +480,20 @@ const HeroSection = ({ brands = [] }) => {
 
 // Home Page Components (keeping all existing ones)
 const TrendingGear = ({ products }) => {
-  const { addToCart } = useApp();
+  const { addToCart, user } = useApp();
+  const navigate = useNavigate();
   
   const handleAddToCart = async (productId) => {
-    const success = await addToCart(productId);
-    if (success) {
+    if (!user) {
+      navigate('/user-login');
+      return;
+    }
+
+    const result = await addToCart(productId);
+    if (result.success) {
       alert('Product added to cart!');
     } else {
-      alert('Error adding product to cart');
+      alert(result.error || 'Error adding product to cart');
     }
   };
 
@@ -515,7 +521,7 @@ const TrendingGear = ({ products }) => {
                     disabled={!product.in_stock}
                     className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
-                    {product.in_stock ? 'Add to Cart' : 'Out of Stock'}
+                    {!user ? 'Login to Add' : product.in_stock ? 'Add to Cart' : 'Out of Stock'}
                   </button>
                 </div>
               </div>
