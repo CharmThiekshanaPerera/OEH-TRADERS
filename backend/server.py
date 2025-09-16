@@ -798,10 +798,36 @@ async def create_sample_users():
             message = ChatMessage(**msg_data)
             await db.chat_messages.insert_one(message.dict())
     
+    # Create sample admin accounts
+    sample_admins = [
+        {
+            "email": "admin@tacticalgear.com",
+            "password": hash_password("admin123"),
+            "username": "admin",
+            "is_super_admin": True,
+            "is_active": True
+        },
+        {
+            "email": "support@tacticalgear.com", 
+            "password": hash_password("support123"),
+            "username": "support",
+            "is_super_admin": False,
+            "is_active": True
+        }
+    ]
+    
+    for admin_data in sample_admins:
+        admin_dict = {k: v for k, v in admin_data.items() if k != "password"}
+        admin = Admin(**admin_dict)
+        admin_with_password = admin.dict()
+        admin_with_password["password"] = admin_data["password"]
+        await db.admins.insert_one(admin_with_password)
+
     return {
-        "message": "Sample users, dealers, quotes, and chat messages created successfully",
+        "message": "Sample users, dealers, quotes, chat messages, and admin accounts created successfully",
         "users_created": len(sample_users),
         "dealers_created": len(sample_dealers),
+        "admins_created": len(sample_admins),
         "quotes_created": 2,
         "chat_messages_created": 4
     }
