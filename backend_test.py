@@ -1313,23 +1313,39 @@ class TacticalGearAPITester:
         # Test 3: Admin send message
         total_tests += 1
         try:
-            admin_message_data = {
-                "user_id": self.test_user_id,
-                "sender_type": "admin",
-                "sender_name": "Support Team",
-                "message": "Thank you for your inquiry! I'd be happy to help with bulk pricing information."
-            }
+            # Ensure we have admin token for admin operations
+            if not self.admin_token:
+                # Try to get admin token
+                admin_login = {
+                    "username": "admin",
+                    "password": "admin123"
+                }
+                login_response = self.session.post(f"{self.base_url}/admin/login", json=admin_login)
+                if login_response.status_code == 200:
+                    login_data = login_response.json()
+                    self.admin_token = login_data.get("access_token")
             
-            response = self.session.post(f"{self.base_url}/admin/chat/send", json=admin_message_data)
-            if response.status_code == 200:
-                data = response.json()
-                if "message" in data and "sent successfully" in data["message"].lower():
-                    self.log_test("Admin Send Message", True, "Admin message sent successfully")
-                    tests_passed += 1
+            if self.admin_token:
+                admin_headers = {"Authorization": f"Bearer {self.admin_token}"}
+                admin_message_data = {
+                    "user_id": self.test_user_id,
+                    "sender_type": "admin",
+                    "sender_name": "Support Team",
+                    "message": "Thank you for your inquiry! I'd be happy to help with bulk pricing information."
+                }
+                
+                response = self.session.post(f"{self.base_url}/admin/chat/send", json=admin_message_data, headers=admin_headers)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "message" in data and "sent successfully" in data["message"].lower():
+                        self.log_test("Admin Send Message", True, "Admin message sent successfully")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Admin Send Message", False, "Unexpected response format", data)
                 else:
-                    self.log_test("Admin Send Message", False, "Unexpected response format", data)
+                    self.log_test("Admin Send Message", False, f"HTTP {response.status_code}", response.text)
             else:
-                self.log_test("Admin Send Message", False, f"HTTP {response.status_code}", response.text)
+                self.log_test("Admin Send Message", False, "No admin token available for admin chat testing")
         except Exception as e:
             self.log_test("Admin Send Message", False, f"Error: {str(e)}")
         
