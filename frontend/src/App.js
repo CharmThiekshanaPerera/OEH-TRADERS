@@ -2413,6 +2413,11 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({});
   const [pendingDealers, setPendingDealers] = useState([]);
   const [allQuotes, setAllQuotes] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -2422,7 +2427,10 @@ const AdminDashboard = () => {
       return;
     }
     fetchDashboardData();
-  }, [admin, navigate]);
+    if (activeTab === 'chat') {
+      fetchConversations();
+    }
+  }, [admin, navigate, activeTab]);
 
   const fetchDashboardData = async () => {
     try {
@@ -2442,6 +2450,52 @@ const AdminDashboard = () => {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchConversations = async () => {
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      const headers = { Authorization: `Bearer ${adminToken}` };
+      const response = await axios.get(`${API}/admin/chat/conversations`, { headers });
+      setConversations(response.data);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    }
+  };
+
+  const fetchChatMessages = async (userId) => {
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      const headers = { Authorization: `Bearer ${adminToken}` };
+      const response = await axios.get(`${API}/admin/chat/${userId}/messages`, { headers });
+      setChatMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching chat messages:', error);
+    }
+  };
+
+  const sendAdminMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedConversation) return;
+
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      const headers = { Authorization: `Bearer ${adminToken}` };
+      
+      await axios.post(`${API}/admin/chat/send`, {
+        user_id: selectedConversation.user_id,
+        sender_type: 'admin',
+        sender_name: `Admin (${admin.username})`,
+        message: newMessage
+      }, { headers });
+
+      setNewMessage('');
+      fetchChatMessages(selectedConversation.user_id);
+      fetchConversations(); // Refresh conversations list
+    } catch (error) {
+      console.error('Error sending admin message:', error);
+      alert('Error sending message');
     }
   };
 
