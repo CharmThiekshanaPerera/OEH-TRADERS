@@ -2274,7 +2274,7 @@ class TacticalGearAPITester:
             print(f"  {status} {name}")
         
         print("\n🔑 Admin Panel:")
-        admin_names = ["Admin Authentication", "Admin Management", "Dealer Management", "Quote Management", "Admin Authorization"]
+        admin_names = ["Admin Authentication", "Admin Management", "Dealer Management", "Quote Management", "Admin Authorization", "Admin Chat System"]
         for name, result in zip(admin_names, admin_tests):
             status = "✅" if result else "❌"
             print(f"  {status} {name}")
