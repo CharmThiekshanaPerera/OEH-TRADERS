@@ -175,7 +175,7 @@ const useApp = () => useContext(AppContext);
 // Navigation Component
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { dealer, cart, logout } = useApp();
+  const { dealer, user, cart, logout } = useApp();
   const navigate = useNavigate();
   
   return (
@@ -203,36 +203,59 @@ const Navigation = () => {
           {/* Cart and Auth */}
           <div className="flex items-center space-x-4">
             <button 
-              onClick={() => navigate('/cart')}
+              onClick={() => user ? navigate('/cart') : navigate('/user-login')}
               className="relative hover:text-red-400 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 7H2m0 0h2m4 8a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z" />
               </svg>
-              {cart.items.length > 0 && (
+              {cart.items && cart.items.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
                   {cart.items.reduce((sum, item) => sum + item.quantity, 0)}
                 </span>
               )}
             </button>
             
-            {dealer ? (
+            {/* User Authentication */}
+            {user ? (
               <div className="relative group">
                 <button className="flex items-center space-x-2 hover:text-red-400">
-                  <span>{dealer.contact_name}</span>
+                  <span>{user.first_name} {user.last_name}</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
                 <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                   <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">Profile</Link>
-                  <Link to="/orders" className="block px-4 py-2 hover:bg-gray-100">Orders</Link>
+                  <Link to="/quotes" className="block px-4 py-2 hover:bg-gray-100">My Quotes</Link>
+                  <Link to="/chat" className="block px-4 py-2 hover:bg-gray-100">Messages</Link>
                   <button onClick={logout} className="w-full text-left px-4 py-2 hover:bg-gray-100">Logout</button>
                 </div>
               </div>
             ) : (
-              <Link to="/login" className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors">
-                Dealer Login
+              <Link to="/user-login" className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors">
+                Login
+              </Link>
+            )}
+            
+            {/* Dealer Login - separate */}
+            {dealer ? (
+              <div className="relative group">
+                <button className="flex items-center space-x-2 hover:text-red-400 text-sm">
+                  <span>Dealer: {dealer.contact_name}</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                  <Link to="/dealer-profile" className="block px-4 py-2 hover:bg-gray-100">Dealer Profile</Link>
+                  <Link to="/dealer-orders" className="block px-4 py-2 hover:bg-gray-100">Orders</Link>
+                  <button onClick={logout} className="w-full text-left px-4 py-2 hover:bg-gray-100">Logout</button>
+                </div>
+              </div>
+            ) : (
+              <Link to="/dealer-login" className="text-sm hover:text-red-400 transition-colors">
+                Dealer Portal
               </Link>
             )}
             
@@ -260,6 +283,9 @@ const Navigation = () => {
               <Link to="/brands" className="block hover:text-red-400 transition-colors py-2">Brands</Link>
               <Link to="/about" className="block hover:text-red-400 transition-colors py-2">About</Link>
               <Link to="/contact" className="block hover:text-red-400 transition-colors py-2">Contact</Link>
+              {!user && (
+                <Link to="/user-login" className="block hover:text-red-400 transition-colors py-2">Login</Link>
+              )}
             </div>
           </div>
         )}
