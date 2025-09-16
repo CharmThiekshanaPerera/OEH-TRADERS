@@ -16,6 +16,8 @@ class TacticalGearAPITester:
         self.session = requests.Session()
         self.test_results = []
         self.dealer_token = None
+        self.user_token = None
+        self.test_user_id = None
         self.test_session_id = str(uuid.uuid4())
         
     def log_test(self, test_name: str, success: bool, message: str, details: Any = None):
