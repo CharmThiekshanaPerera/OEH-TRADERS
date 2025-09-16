@@ -883,7 +883,7 @@ const Home = () => {
 
   return (
     <div>
-      <HeroSection />
+      <HeroSection brands={brands} />
       <NewArrivals products={newArrivals} />
       <TrendingGear products={products} />
       <DepartmentOfDeals deals={deals} />
