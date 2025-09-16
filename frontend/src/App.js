@@ -2365,7 +2365,7 @@ const AdminLogin = () => {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-red-600">Admin Login</h2>
-            <p className="text-gray-600 mt-2">TacticalGear Management Portal</p>
+            <p className="text-gray-600 mt-2">OEH TRADERS Management Portal</p>
           </div>
           
           {message && (
