@@ -1529,7 +1529,7 @@ const DealerLogin = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const { login, register } = useApp();
+  const { loginDealer, registerDealer } = useApp();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
