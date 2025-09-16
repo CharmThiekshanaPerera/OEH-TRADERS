@@ -758,6 +758,7 @@ const Home = () => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [deals, setDeals] = useState([]);
+  const [newArrivals, setNewArrivals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -767,17 +768,19 @@ const Home = () => {
         await axios.post(`${API}/initialize-data`);
         
         // Then fetch all data
-        const [productsRes, categoriesRes, brandsRes, dealsRes] = await Promise.all([
+        const [productsRes, categoriesRes, brandsRes, dealsRes, newArrivalsRes] = await Promise.all([
           axios.get(`${API}/products`),
           axios.get(`${API}/categories`),
           axios.get(`${API}/brands`),
-          axios.get(`${API}/products/deals`)
+          axios.get(`${API}/products/deals`),
+          axios.get(`${API}/products/new-arrivals`)
         ]);
         
         setProducts(productsRes.data);
         setCategories(categoriesRes.data);
         setBrands(brandsRes.data);
         setDeals(dealsRes.data);
+        setNewArrivals(newArrivalsRes.data);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -799,9 +802,10 @@ const Home = () => {
   return (
     <div>
       <HeroSection />
+      <NewArrivals products={newArrivals} />
       <TrendingGear products={products} />
       <DepartmentOfDeals deals={deals} />
-      <CustomerTopPicks products={products} />
+      <CustomerTopPicks products={products} />   
       <PopularCategories categories={categories} />
       <TopBrands brands={brands} />
       <TacticalExperts />
