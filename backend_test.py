@@ -2227,6 +2227,12 @@ class TacticalGearAPITester:
         admin_quote_mgmt_ok = self.test_admin_quote_management()
         admin_authorization_ok = self.test_admin_authorization()
         
+        print("\n💬 Testing Admin Chat System...")
+        print("-" * 50)
+        
+        # Test admin chat system functionality
+        admin_chat_ok = self.test_admin_chat_system()
+        
         # Summary
         print("\n" + "=" * 80)
         print("📊 COMPREHENSIVE B2B BACKEND TEST SUMMARY")
