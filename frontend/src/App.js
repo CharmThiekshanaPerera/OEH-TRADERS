@@ -966,7 +966,14 @@ const Footer = () => (
     <div className="max-w-7xl mx-auto px-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div>
-          <h3 className="text-2xl font-bold text-red-500 mb-4">TacticalGear</h3>
+          <div className="flex items-center space-x-3 mb-4">
+            <img 
+              src="https://images.unsplash.com/photo-1662052955098-042b46e60c2b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwzfHxjb21wYW55JTIwbG9nb3xlbnwwfHx8Ymx1ZXwxNzU4MDEwODYzfDA&ixlib=rb-4.1.0&q=85" 
+              alt="OEH TRADERS Logo" 
+              className="w-10 h-10 rounded object-cover"
+            />
+            <h3 className="text-2xl font-bold text-red-500">OEH TRADERS</h3>
+          </div>
           <p className="text-gray-400">Professional tactical equipment for military, law enforcement, and civilian use.</p>
         </div>
         <div>
