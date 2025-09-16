@@ -2280,6 +2280,323 @@ const UserProfile = () => {
   );
 };
 
+// Admin Login Page
+const AdminLogin = () => {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const { loginAdmin } = useApp();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const result = await loginAdmin(formData.username, formData.password);
+      if (result.success) {
+        navigate('/admin/dashboard');
+      } else {
+        setMessage(result.error);
+      }
+    } catch (error) {
+      setMessage('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-16 flex items-center justify-center">
+      <div className="max-w-md w-full mx-4">
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-red-600">Admin Login</h2>
+            <p className="text-gray-600 mt-2">TacticalGear Management Portal</p>
+          </div>
+          
+          {message && (
+            <div className="mb-4 p-3 rounded bg-red-100 text-red-700">
+              {message}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              name="username"
+              placeholder="Admin Username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+              className="w-full p-3 border rounded-lg focus:border-red-500"
+            />
+            
+            <input
+              type="password"
+              name="password"
+              placeholder="Admin Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="w-full p-3 border rounded-lg focus:border-red-500"
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+            >
+              {loading ? 'Logging in...' : 'Login to Admin Portal'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-yellow-800 mb-2">Admin Credentials:</h4>
+              <p className="text-sm text-yellow-700">
+                <strong>Username:</strong> admin<br/>
+                <strong>Password:</strong> admin123
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Admin Dashboard
+const AdminDashboard = () => {
+  const { admin, logout } = useApp();
+  const [stats, setStats] = useState({});
+  const [pendingDealers, setPendingDealers] = useState([]);
+  const [allQuotes, setAllQuotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!admin) {
+      navigate('/admin/login');
+      return;
+    }
+    fetchDashboardData();
+  }, [admin, navigate]);
+
+  const fetchDashboardData = async () => {
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      const headers = { Authorization: `Bearer ${adminToken}` };
+
+      const [statsRes, dealersRes, quotesRes] = await Promise.all([
+        axios.get(`${API}/admin/stats`, { headers }),
+        axios.get(`${API}/admin/dealers/pending`, { headers }),
+        axios.get(`${API}/admin/quotes`, { headers })
+      ]);
+
+      setStats(statsRes.data);
+      setPendingDealers(dealersRes.data);
+      setAllQuotes(quotesRes.data);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const approveDealer = async (dealerId) => {
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      await axios.put(`${API}/admin/dealers/${dealerId}/approve`, {}, {
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+      alert('Dealer approved successfully!');
+      fetchDashboardData();
+    } catch (error) {
+      alert('Error approving dealer');
+    }
+  };
+
+  const rejectDealer = async (dealerId) => {
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      await axios.put(`${API}/admin/dealers/${dealerId}/reject`, {}, {
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+      alert('Dealer rejected successfully!');
+      fetchDashboardData();
+    } catch (error) {
+      alert('Error rejecting dealer');
+    }
+  };
+
+  const updateQuoteStatus = async (quoteId, status, notes = '') => {
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      await axios.put(`${API}/admin/quotes/${quoteId}/status?status=${status}&admin_notes=${encodeURIComponent(notes)}`, {}, {
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+      alert('Quote status updated successfully!');
+      fetchDashboardData();
+    } catch (error) {
+      alert('Error updating quote status');
+    }
+  };
+
+  if (!admin) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-16">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-gray-600">Welcome back, {admin.username}</p>
+          </div>
+          <button
+            onClick={logout}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+          >
+            Logout
+          </button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-500">Total Users</h3>
+            <p className="text-3xl font-bold text-blue-600">{stats.total_users || 0}</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-500">Pending Dealers</h3>
+            <p className="text-3xl font-bold text-yellow-600">{stats.pending_dealers || 0}</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-500">Pending Quotes</h3>
+            <p className="text-3xl font-bold text-orange-600">{stats.pending_quotes || 0}</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-sm font-medium text-gray-500">Total Products</h3>
+            <p className="text-3xl font-bold text-green-600">{stats.total_products || 0}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Pending Dealers */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold">Pending Dealer Approvals</h2>
+            </div>
+            <div className="p-6">
+              {loading ? (
+                <div className="text-center">Loading...</div>
+              ) : pendingDealers.length === 0 ? (
+                <p className="text-gray-500">No pending dealer approvals</p>
+              ) : (
+                <div className="space-y-4">
+                  {pendingDealers.map((dealer) => (
+                    <div key={dealer.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-semibold">{dealer.company_name}</h3>
+                          <p className="text-sm text-gray-600">{dealer.contact_name}</p>
+                          <p className="text-sm text-gray-600">{dealer.email}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm mb-3">License: {dealer.license_number}</p>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => approveDealer(dealer.id)}
+                          className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => rejectDealer(dealer.id)}
+                          className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Quotes */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold">Recent Quote Requests</h2>
+            </div>
+            <div className="p-6">
+              {loading ? (
+                <div className="text-center">Loading...</div>
+              ) : allQuotes.length === 0 ? (
+                <p className="text-gray-500">No quote requests</p>
+              ) : (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {allQuotes.slice(0, 5).map((quote) => (
+                    <div key={quote.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-semibold">{quote.project_name}</h3>
+                          <p className="text-sm text-gray-600">{quote.user_name} - {quote.user_email}</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          quote.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {quote.status.toUpperCase()}
+                        </span>
+                      </div>
+                      <p className="text-sm mb-2">Total: ${quote.total_amount.toFixed(2)}</p>
+                      <p className="text-sm mb-3">{quote.intended_use.replace('_', ' ').toUpperCase()}</p>
+                      
+                      {quote.status === 'pending' && (
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => updateQuoteStatus(quote.id, 'approved', 'Approved for processing')}
+                            className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => updateQuoteStatus(quote.id, 'declined', 'Unable to fulfill at this time')}
+                            className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Chat Interface
 const ChatInterface = () => {
   const { user } = useApp();
