@@ -241,6 +241,7 @@ test_plan:
   b2b_features_tested: true
   admin_features_testing: true
   admin_backend_complete: true
+  admin_chat_system_tested: true
 
   - task: "Dealer Authentication System"
     implemented: true
