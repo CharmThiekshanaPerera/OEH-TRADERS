@@ -783,8 +783,6 @@ textarea:focus {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
   z-index: 5;
 }
 
@@ -805,7 +803,7 @@ textarea:focus {
 }
 
 .brand-logo-card {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 0.5rem;
   padding: 1rem;
   height: 5rem;
@@ -813,21 +811,22 @@ textarea:focus {
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .brand-logo-card:hover {
   background: rgba(255, 255, 255, 1);
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 .brand-logo-image {
   max-height: 3rem;
   max-width: 100%;
   object-fit: contain;
-  filter: brightness(0.75) contrast(1.1);
+  filter: brightness(0.8) contrast(1.1);
   transition: all 0.3s ease;
 }
 
@@ -846,14 +845,18 @@ textarea:focus {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.6);
   transition: all 0.3s ease;
   cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .brand-slideshow-dot.active {
   background: #dc2626;
+  border-color: #dc2626;
   transform: scale(1.25);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
 }
 
 .brand-slideshow-title {
@@ -864,6 +867,7 @@ textarea:focus {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin-bottom: 0.75rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 /* Responsive adjustments for brand slideshow */
