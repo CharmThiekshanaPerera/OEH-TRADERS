@@ -213,8 +213,13 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold text-red-500">
-              TacticalGear
+            <Link to="/" className="flex items-center space-x-3">
+              <img 
+                src="https://images.unsplash.com/photo-1662052955098-042b46e60c2b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwzfHxjb21wYW55JTIwbG9nb3xlbnwwfHx8Ymx1ZXwxNzU4MDEwODYzfDA&ixlib=rb-4.1.0&q=85" 
+                alt="OEH TRADERS Logo" 
+                className="w-8 h-8 rounded object-cover"
+              />
+              <span className="text-2xl font-bold text-red-500">OEH TRADERS</span>
             </Link>
           </div>
           
