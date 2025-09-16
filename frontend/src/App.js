@@ -258,10 +258,10 @@ const BrandLogoSlideshow = ({ brands }) => {
   }
   
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-80 backdrop-blur-sm py-4">
+    <div className="absolute bottom-0 left-0 right-0 py-4">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-3">
-          <p className="text-white text-sm font-semibold tracking-wider">
+          <p className="text-white text-sm font-semibold tracking-wider drop-shadow-lg">
             TRUSTED BY PROFESSIONALS WORLDWIDE
           </p>
         </div>
