@@ -111,7 +111,53 @@ class BrandWithCount(BaseModel):
     website: Optional[str] = None
     product_count: int
 
-# Dealer Authentication Models
+# User Authentication Models (separate from dealers)
+class User(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: EmailStr
+    first_name: str
+    last_name: str
+    company_name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip_code: Optional[str] = None
+    country: Optional[str] = "United States"
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    first_name: str
+    last_name: str
+    company_name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip_code: Optional[str] = None
+    country: Optional[str] = "United States"
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    email: EmailStr
+    first_name: str
+    last_name: str
+    company_name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip_code: Optional[str] = None
+    country: Optional[str] = None
+
+# Dealer Authentication Models (existing)
 class Dealer(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: EmailStr
@@ -148,7 +194,83 @@ class DealerResponse(BaseModel):
     is_approved: bool
     is_active: bool
 
-# Shopping Cart Models
+# Quote System Models
+class QuoteItem(BaseModel):
+    product_id: str
+    quantity: int
+    price: float
+    notes: Optional[str] = None
+
+class Quote(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    items: List[QuoteItem]
+    total_amount: float
+    
+    # Additional quote information
+    project_name: str
+    intended_use: str
+    delivery_date: Optional[datetime] = None
+    delivery_address: str
+    billing_address: str
+    company_size: Optional[str] = None
+    budget_range: Optional[str] = None
+    additional_requirements: Optional[str] = None
+    
+    status: str = "pending"  # pending, reviewed, approved, declined
+    admin_notes: Optional[str] = None
+    
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class QuoteCreate(BaseModel):
+    user_id: str
+    items: List[QuoteItem]
+    project_name: str
+    intended_use: str
+    delivery_date: Optional[datetime] = None
+    delivery_address: str
+    billing_address: str
+    company_size: Optional[str] = None
+    budget_range: Optional[str] = None
+    additional_requirements: Optional[str] = None
+
+class QuoteResponse(BaseModel):
+    id: str
+    user_name: str
+    user_email: str
+    company_name: Optional[str]
+    items: List[QuoteItem]
+    total_amount: float
+    project_name: str
+    intended_use: str
+    delivery_date: Optional[datetime]
+    delivery_address: str
+    billing_address: str
+    company_size: Optional[str]
+    budget_range: Optional[str]
+    additional_requirements: Optional[str]
+    status: str
+    admin_notes: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+# Chat System Models
+class ChatMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    sender_type: str  # "user" or "admin"
+    sender_name: str
+    message: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ChatMessageCreate(BaseModel):
+    user_id: str
+    sender_type: str
+    sender_name: str
+    message: str
+
+# Shopping Cart Models (enhanced for users)
 class CartItem(BaseModel):
     product_id: str
     quantity: int
@@ -156,8 +278,7 @@ class CartItem(BaseModel):
 
 class Cart(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    dealer_id: Optional[str] = None
-    session_id: str
+    user_id: str
     items: List[CartItem] = []
     total: float = 0.0
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -166,23 +287,6 @@ class Cart(BaseModel):
 class AddToCartRequest(BaseModel):
     product_id: str
     quantity: int = 1
-    session_id: str
-
-class Order(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    dealer_id: Optional[str] = None
-    session_id: str
-    items: List[CartItem]
-    total: float
-    status: str = "pending"  # pending, confirmed, shipped, delivered, cancelled
-    shipping_address: str
-    billing_address: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class CreateOrderRequest(BaseModel):
-    session_id: str
-    shipping_address: str
-    billing_address: str
 
 # Utility functions
 def hash_password(password: str) -> str:
@@ -191,31 +295,52 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, hashed: str) -> bool:
     return hash_password(password) == hashed
 
-def create_jwt_token(dealer_id: str) -> str:
+def create_jwt_token(user_id: str, user_type: str = "user") -> str:
     payload = {
-        "dealer_id": dealer_id,
+        "user_id": user_id,
+        "user_type": user_type,
         "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-def verify_jwt_token(token: str) -> Optional[str]:
+def verify_jwt_token(token: str) -> Optional[Dict]:
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload.get("dealer_id")
+        return {
+            "user_id": payload.get("user_id"),
+            "user_type": payload.get("user_type", "user")
+        }
     except jwt.ExpiredSignatureError:
         return None
     except jwt.InvalidTokenError:
         return None
 
-async def get_current_dealer(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dealer:
-    dealer_id = verify_jwt_token(credentials.credentials)
-    if not dealer_id:
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
+    token_data = verify_jwt_token(credentials.credentials)
+    if not token_data or token_data["user_type"] != "user":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token"
         )
     
-    dealer = await db.dealers.find_one({"id": dealer_id, "is_active": True})
+    user = await db.users.find_one({"id": token_data["user_id"], "is_active": True})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive"
+        )
+    
+    return User(**user)
+
+async def get_current_dealer(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dealer:
+    token_data = verify_jwt_token(credentials.credentials)
+    if not token_data or token_data["user_type"] != "dealer":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+    
+    dealer = await db.dealers.find_one({"id": token_data["user_id"], "is_active": True})
     if not dealer:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -469,7 +594,57 @@ async def initialize_sample_data():
     
     return {"message": "Sample data initialized successfully"}
 
-# Dealer Authentication Endpoints
+# User Authentication Endpoints
+@api_router.post("/users/register")
+async def register_user(user_data: UserCreate):
+    # Check if user already exists
+    existing_user = await db.users.find_one({"email": user_data.email})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User with this email already exists"
+        )
+    
+    # Create new user
+    user_dict = user_data.dict()
+    hashed_password = hash_password(user_data.password)
+    user = User(**{k: v for k, v in user_dict.items() if k != "password"})
+    
+    # Store with password
+    user_with_password = user.dict()
+    user_with_password["password"] = hashed_password
+    
+    await db.users.insert_one(user_with_password)
+    
+    return {"message": "User registration successful"}
+
+@api_router.post("/users/login")
+async def login_user(login_data: UserLogin):
+    user = await db.users.find_one({"email": login_data.email})
+    if not user or not verify_password(login_data.password, user["password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+    
+    if not user["is_active"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is inactive"
+        )
+    
+    token = create_jwt_token(user["id"], "user")
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": UserResponse(**user)
+    }
+
+@api_router.get("/users/profile", response_model=UserResponse)
+async def get_user_profile(current_user: User = Depends(get_current_user)):
+    return UserResponse(**current_user.dict())
+
+# Dealer Authentication Endpoints (existing)
 @api_router.post("/dealers/register")
 async def register_dealer(dealer_data: DealerCreate):
     # Check if dealer already exists
@@ -483,7 +658,6 @@ async def register_dealer(dealer_data: DealerCreate):
     # Create new dealer
     dealer_dict = dealer_data.dict()
     hashed_password = hash_password(dealer_data.password)
-    dealer_dict["password"] = hashed_password
     dealer = Dealer(**{k: v for k, v in dealer_dict.items() if k != "password"})
     
     # Store with password
@@ -515,7 +689,7 @@ async def login_dealer(login_data: DealerLogin):
             detail="Dealer account is inactive"
         )
     
-    token = create_jwt_token(dealer["id"])
+    token = create_jwt_token(dealer["id"], "dealer")
     return {
         "access_token": token,
         "token_type": "bearer",
@@ -526,9 +700,9 @@ async def login_dealer(login_data: DealerLogin):
 async def get_dealer_profile(current_dealer: Dealer = Depends(get_current_dealer)):
     return DealerResponse(**current_dealer.dict())
 
-# Shopping Cart Endpoints
+# Enhanced Shopping Cart Endpoints (User-based)
 @api_router.post("/cart/add")
-async def add_to_cart(request: AddToCartRequest):
+async def add_to_cart(request: AddToCartRequest, current_user: User = Depends(get_current_user)):
     # Check if product exists and is in stock
     product = await db.products.find_one({"id": request.product_id})
     if not product:
@@ -537,11 +711,11 @@ async def add_to_cart(request: AddToCartRequest):
     if not product["in_stock"] or product["stock_quantity"] < request.quantity:
         raise HTTPException(status_code=400, detail="Insufficient stock")
     
-    # Find or create cart
-    cart = await db.carts.find_one({"session_id": request.session_id})
+    # Find or create cart for user
+    cart = await db.carts.find_one({"user_id": current_user.id})
     
     if not cart:
-        cart = Cart(session_id=request.session_id, items=[])
+        cart = Cart(user_id=current_user.id, items=[])
         cart_dict = cart.dict()
     else:
         # Remove MongoDB _id field
@@ -568,16 +742,16 @@ async def add_to_cart(request: AddToCartRequest):
     
     # Save cart
     await db.carts.replace_one(
-        {"session_id": request.session_id},
+        {"user_id": current_user.id},
         cart_dict,
         upsert=True
     )
     
     return {"message": "Item added to cart", "cart": cart_dict}
 
-@api_router.get("/cart/{session_id}")
-async def get_cart(session_id: str):
-    cart = await db.carts.find_one({"session_id": session_id})
+@api_router.get("/cart")
+async def get_cart(current_user: User = Depends(get_current_user)):
+    cart = await db.carts.find_one({"user_id": current_user.id})
     if not cart:
         return {"items": [], "total": 0.0}
     
@@ -598,9 +772,9 @@ async def get_cart(session_id: str):
     cart_dict["items"] = enriched_items
     return cart_dict
 
-@api_router.delete("/cart/{session_id}/item/{product_id}")
-async def remove_from_cart(session_id: str, product_id: str):
-    cart = await db.carts.find_one({"session_id": session_id})
+@api_router.delete("/cart/item/{product_id}")
+async def remove_from_cart(product_id: str, current_user: User = Depends(get_current_user)):
+    cart = await db.carts.find_one({"user_id": current_user.id})
     if not cart:
         raise HTTPException(status_code=404, detail="Cart not found")
     
@@ -610,32 +784,123 @@ async def remove_from_cart(session_id: str, product_id: str):
     cart_dict["total"] = sum(item["quantity"] * item["price"] for item in cart_dict["items"])
     cart_dict["updated_at"] = datetime.now(timezone.utc)
     
-    await db.carts.replace_one({"session_id": session_id}, cart_dict)
+    await db.carts.replace_one({"user_id": current_user.id}, cart_dict)
     return {"message": "Item removed from cart"}
 
-@api_router.post("/orders")
-async def create_order(request: CreateOrderRequest):
-    cart = await db.carts.find_one({"session_id": request.session_id})
-    if not cart or not cart["items"]:
-        raise HTTPException(status_code=400, detail="Cart is empty")
+# Quote System Endpoints
+@api_router.post("/quotes")
+async def create_quote(quote_data: QuoteCreate, current_user: User = Depends(get_current_user)):
+    # Calculate total amount
+    total_amount = sum(item.quantity * item.price for item in quote_data.items)
     
-    # Create order
-    order = Order(
-        session_id=request.session_id,
-        items=cart["items"],
-        total=cart["total"],
-        shipping_address=request.shipping_address,
-        billing_address=request.billing_address
+    # Create quote
+    quote = Quote(
+        user_id=current_user.id,
+        items=quote_data.items,
+        total_amount=total_amount,
+        project_name=quote_data.project_name,
+        intended_use=quote_data.intended_use,
+        delivery_date=quote_data.delivery_date,
+        delivery_address=quote_data.delivery_address,
+        billing_address=quote_data.billing_address,
+        company_size=quote_data.company_size,
+        budget_range=quote_data.budget_range,
+        additional_requirements=quote_data.additional_requirements
     )
     
-    await db.orders.insert_one(order.dict())
+    await db.quotes.insert_one(quote.dict())
     
-    # Clear cart
-    await db.carts.delete_one({"session_id": request.session_id})
+    # Clear user's cart after quote submission
+    await db.carts.delete_one({"user_id": current_user.id})
     
-    return {"message": "Order created successfully", "order_id": order.id}
+    return {"message": "Quote submitted successfully", "quote_id": quote.id}
 
-# Enhanced Product endpoints with stock filtering
+@api_router.get("/quotes", response_model=List[QuoteResponse])
+async def get_user_quotes(current_user: User = Depends(get_current_user)):
+    quotes = await db.quotes.find({"user_id": current_user.id}).sort("created_at", -1).to_list(length=None)
+    
+    quote_responses = []
+    for quote in quotes:
+        quote_dict = {k: v for k, v in quote.items() if k != "_id"}
+        quote_responses.append(QuoteResponse(
+            **quote_dict,
+            user_name=f"{current_user.first_name} {current_user.last_name}",
+            user_email=current_user.email,
+            company_name=current_user.company_name
+        ))
+    
+    return quote_responses
+
+# Admin Endpoints for Quote Management
+@api_router.get("/admin/quotes", response_model=List[QuoteResponse])
+async def get_all_quotes():
+    # In a real application, you'd add admin authentication here
+    quotes = await db.quotes.find().sort("created_at", -1).to_list(length=None)
+    
+    quote_responses = []
+    for quote in quotes:
+        # Get user details
+        user = await db.users.find_one({"id": quote["user_id"]})
+        quote_dict = {k: v for k, v in quote.items() if k != "_id"}
+        
+        if user:
+            quote_responses.append(QuoteResponse(
+                **quote_dict,
+                user_name=f"{user['first_name']} {user['last_name']}",
+                user_email=user["email"],
+                company_name=user.get("company_name")
+            ))
+    
+    return quote_responses
+
+@api_router.put("/admin/quotes/{quote_id}/status")
+async def update_quote_status(quote_id: str, status: str, admin_notes: Optional[str] = None):
+    # In a real application, you'd add admin authentication here
+    update_data = {"status": status, "updated_at": datetime.now(timezone.utc)}
+    if admin_notes:
+        update_data["admin_notes"] = admin_notes
+    
+    result = await db.quotes.update_one(
+        {"id": quote_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    return {"message": "Quote status updated successfully"}
+
+# Chat System Endpoints
+@api_router.post("/chat/send")
+async def send_message(message_data: ChatMessageCreate, current_user: User = Depends(get_current_user)):
+    # For user messages, override sender info
+    message = ChatMessage(
+        user_id=current_user.id,
+        sender_type="user",
+        sender_name=f"{current_user.first_name} {current_user.last_name}",
+        message=message_data.message
+    )
+    
+    await db.chat_messages.insert_one(message.dict())
+    return {"message": "Message sent successfully"}
+
+@api_router.get("/chat/{user_id}")
+async def get_chat_messages(user_id: str, current_user: User = Depends(get_current_user)):
+    # Users can only access their own chat
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    messages = await db.chat_messages.find({"user_id": user_id}).sort("created_at", 1).to_list(length=None)
+    return [ChatMessage(**{k: v for k, v in msg.items() if k != "_id"}) for msg in messages]
+
+@api_router.post("/admin/chat/send")
+async def admin_send_message(message_data: ChatMessageCreate):
+    # In a real application, you'd add admin authentication here
+    message = ChatMessage(**message_data.dict())
+    await db.chat_messages.insert_one(message.dict())
+    return {"message": "Admin message sent successfully"}
+
+# Enhanced Product endpoints with stock filtering (existing)
 @api_router.get("/products", response_model=List[Product])
 async def get_products(
     category: Optional[str] = None,
@@ -769,7 +1034,7 @@ class StatusCheckCreate(BaseModel):
 
 @api_router.get("/")
 async def root():
-    return {"message": "TacticalGear API v1.0 - Enhanced with Dealer Auth & Shopping"}
+    return {"message": "TacticalGear API v2.0 - B2B Platform with User Auth & Quote System"}
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
