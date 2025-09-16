@@ -1411,9 +1411,9 @@ class TacticalGearAPITester:
         return tests_passed == total_tests
     
     def run_all_tests(self):
-        """Run all API tests including new features"""
-        print("🚀 Starting Enhanced Tactical Gear E-commerce Backend API Tests")
-        print("=" * 70)
+        """Run comprehensive B2B tactical gear backend tests"""
+        print("🚀 Starting Comprehensive B2B Tactical Gear Backend API Tests")
+        print("=" * 80)
         
         # Test 1: Health check
         health_ok = self.test_health_check()
@@ -1422,94 +1422,152 @@ class TacticalGearAPITester:
             print("\n❌ API is not responding. Stopping tests.")
             return False
         
-        # Test 2: Initialize data
+        # Test 2: Initialize sample data
         init_ok = self.test_initialize_data()
         
         if not init_ok:
             print("\n❌ Data initialization failed. Stopping tests.")
             return False
         
+        # Test 3: Create sample users
+        sample_users_ok = self.test_create_sample_users()
+        
+        if not sample_users_ok:
+            print("\n❌ Sample users creation failed. Stopping tests.")
+            return False
+        
         # Wait a moment for data to be fully initialized
-        time.sleep(2)
+        time.sleep(3)
         
-        print("\n🔍 Testing Original Features...")
-        print("-" * 40)
+        print("\n🔍 Testing Core Product Features...")
+        print("-" * 50)
         
-        # Test 3: Categories
+        # Test core product functionality
         categories_ok = self.test_get_categories()
-        
-        # Test 4: Brands
         brands_ok = self.test_get_brands()
-        
-        # Test 5: Products
         products_ok = self.test_get_products()
-        
-        # Test 6: Product filtering
         filtering_ok = self.test_product_filtering()
-        
-        # Test 7: Specialized endpoints
         specialized_ok = self.test_specialized_endpoints()
-        
-        # Test 8: Individual product
         individual_ok = self.test_individual_product()
+        enhanced_products_ok = self.test_enhanced_product_apis()
         
-        print("\n🆕 Testing New Enhanced Features...")
-        print("-" * 40)
+        print("\n👤 Testing User Authentication System...")
+        print("-" * 50)
         
-        # Test 9: Dealer Authentication System
-        dealer_auth_ok = self.test_dealer_authentication_flow()
+        # Test user authentication
+        user_auth_ok = self.test_user_authentication_system()
         
-        # Test 10: Shopping Cart & Order Management
-        cart_ok = self.test_shopping_cart_flow()
+        print("\n🏢 Testing Dealer Authentication System...")
+        print("-" * 50)
         
-        # Test 11: Enhanced Filtering with Counts
+        # Test dealer authentication
+        dealer_auth_ok = self.test_dealer_authentication_verification()
+        
+        print("\n🛒 Testing Enhanced Cart System...")
+        print("-" * 50)
+        
+        # Test user-based cart system
+        cart_ok = self.test_enhanced_cart_system()
+        
+        print("\n💼 Testing Quote System...")
+        print("-" * 50)
+        
+        # Test quote system
+        quote_ok = self.test_quote_system()
+        
+        print("\n💬 Testing Chat System...")
+        print("-" * 50)
+        
+        # Test chat system
+        chat_ok = self.test_chat_system()
+        
+        print("\n🔧 Testing Enhanced Filtering...")
+        print("-" * 50)
+        
+        # Test enhanced filtering
         enhanced_filtering_ok = self.test_enhanced_filtering()
         
         # Summary
-        print("\n" + "=" * 70)
-        print("📊 COMPREHENSIVE TEST SUMMARY")
-        print("=" * 70)
+        print("\n" + "=" * 80)
+        print("📊 COMPREHENSIVE B2B BACKEND TEST SUMMARY")
+        print("=" * 80)
         
-        original_tests = [health_ok, init_ok, categories_ok, brands_ok, products_ok, filtering_ok, specialized_ok, individual_ok]
-        new_tests = [dealer_auth_ok, cart_ok, enhanced_filtering_ok]
-        all_tests = original_tests + new_tests
+        # Group tests by category
+        core_tests = [health_ok, init_ok, sample_users_ok]
+        product_tests = [categories_ok, brands_ok, products_ok, filtering_ok, specialized_ok, individual_ok, enhanced_products_ok]
+        auth_tests = [user_auth_ok, dealer_auth_ok]
+        b2b_tests = [cart_ok, quote_ok, chat_ok, enhanced_filtering_ok]
         
+        all_tests = core_tests + product_tests + auth_tests + b2b_tests
         passed_tests = sum(all_tests)
         total_tests = len(all_tests)
         
-        print("\n📋 Original Features:")
-        original_names = ["Health Check", "Data Initialization", "Categories API", "Brands API", "Products API", "Product Filtering", "Specialized Endpoints", "Individual Product"]
-        for i, (name, result) in enumerate(zip(original_names, original_tests)):
+        print("\n🔧 Core System:")
+        core_names = ["Health Check", "Data Initialization", "Sample Users Creation"]
+        for name, result in zip(core_names, core_tests):
             status = "✅" if result else "❌"
             print(f"  {status} {name}")
         
-        print("\n🆕 New Enhanced Features:")
-        new_names = ["Dealer Authentication", "Shopping Cart & Orders", "Enhanced Filtering"]
-        for i, (name, result) in enumerate(zip(new_names, new_tests)):
+        print("\n📦 Product Management:")
+        product_names = ["Categories API", "Brands API", "Products API", "Product Filtering", "Specialized Endpoints", "Individual Product", "Enhanced Product APIs"]
+        for name, result in zip(product_names, product_tests):
+            status = "✅" if result else "❌"
+            print(f"  {status} {name}")
+        
+        print("\n🔐 Authentication Systems:")
+        auth_names = ["User Authentication", "Dealer Authentication"]
+        for name, result in zip(auth_names, auth_tests):
+            status = "✅" if result else "❌"
+            print(f"  {status} {name}")
+        
+        print("\n🏢 B2B Features:")
+        b2b_names = ["Enhanced Cart System", "Quote System", "Chat System", "Enhanced Filtering"]
+        for name, result in zip(b2b_names, b2b_tests):
             status = "✅" if result else "❌"
             print(f"  {status} {name}")
         
         print(f"\n🎯 Overall Result: {passed_tests}/{total_tests} test suites passed")
         
-        # Detailed results
-        print(f"\n📝 Detailed Test Results:")
-        for result in self.test_results:
-            status = "✅" if result["success"] else "❌"
-            print(f"  {status} {result['test']}")
+        # Show workflow completion
+        print(f"\n🔄 Complete Workflow Test:")
+        workflow_steps = [
+            ("Data Initialization", init_ok and sample_users_ok),
+            ("User Registration → Login", user_auth_ok),
+            ("Cart Management", cart_ok),
+            ("Quote Submission", quote_ok),
+            ("Chat Communication", chat_ok)
+        ]
+        
+        for step_name, step_result in workflow_steps:
+            status = "✅" if step_result else "❌"
+            print(f"  {status} {step_name}")
+        
+        # Detailed results for failures
+        failed_tests = [result for result in self.test_results if not result["success"]]
+        if failed_tests:
+            print(f"\n❌ Failed Tests Details:")
+            for result in failed_tests:
+                print(f"  • {result['test']}: {result['message']}")
         
         if passed_tests == total_tests:
-            print("\n🎉 All tests passed! Enhanced Tactical Gear API is working correctly.")
-            print("✨ New features (Dealer Auth, Shopping Cart, Enhanced Filtering) are fully functional!")
+            print("\n🎉 ALL TESTS PASSED! B2B Tactical Gear Backend is fully functional!")
+            print("✨ Complete workflow: User registration → Login → Cart → Quote → Chat ✅")
+            print("🔒 Authentication systems working correctly ✅")
+            print("💼 B2B features fully operational ✅")
             return True
         else:
             failed_count = total_tests - passed_tests
-            print(f"\n⚠️  {failed_count} test suite(s) failed. Check the details above.")
+            print(f"\n⚠️  {failed_count} test suite(s) failed. Review details above.")
             
             # Show which categories failed
-            if not all(original_tests):
-                print("❌ Some original features have issues")
-            if not all(new_tests):
-                print("❌ Some new enhanced features have issues")
+            if not all(core_tests):
+                print("❌ Core system issues detected")
+            if not all(product_tests):
+                print("❌ Product management issues detected")
+            if not all(auth_tests):
+                print("❌ Authentication system issues detected")
+            if not all(b2b_tests):
+                print("❌ B2B feature issues detected")
             
             return False
 
