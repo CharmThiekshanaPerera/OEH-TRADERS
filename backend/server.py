@@ -594,6 +594,184 @@ async def initialize_sample_data():
     
     return {"message": "Sample data initialized successfully"}
 
+# Sample Users Creation Endpoint
+@api_router.post("/create-sample-users")
+async def create_sample_users():
+    # Clear existing users and dealers
+    await db.users.delete_many({})
+    await db.dealers.delete_many({})
+    
+    # Create sample users
+    sample_users = [
+        {
+            "email": "john.doe@company.com",
+            "password": hash_password("password123"),
+            "first_name": "John",
+            "last_name": "Doe",
+            "company_name": "Tactical Solutions LLC",
+            "phone": "555-123-4567",
+            "address": "123 Business Street",
+            "city": "Security City",
+            "state": "CA",
+            "zip_code": "90210",
+            "country": "United States",
+            "is_active": True
+        },
+        {
+            "email": "sarah.wilson@defense.gov",
+            "password": hash_password("password123"),
+            "first_name": "Sarah",
+            "last_name": "Wilson",
+            "company_name": "Defense Department",
+            "phone": "555-987-6543",
+            "address": "456 Government Ave",
+            "city": "Washington",
+            "state": "DC",
+            "zip_code": "20001",
+            "country": "United States",
+            "is_active": True
+        },
+        {
+            "email": "mike.johnson@police.org",
+            "password": hash_password("password123"),
+            "first_name": "Mike",
+            "last_name": "Johnson",
+            "company_name": "Metro Police Department",
+            "phone": "555-456-7890",
+            "address": "789 Safety Blvd",
+            "city": "Metro City",
+            "state": "TX",
+            "zip_code": "75001",
+            "country": "United States",
+            "is_active": True
+        }
+    ]
+    
+    for user_data in sample_users:
+        user_dict = {k: v for k, v in user_data.items() if k != "password"}
+        user = User(**user_dict)
+        user_with_password = user.dict()
+        user_with_password["password"] = user_data["password"]
+        await db.users.insert_one(user_with_password)
+    
+    # Create sample dealers
+    sample_dealers = [
+        {
+            "email": "dealer@tactical-wholesale.com",
+            "password": hash_password("dealer123"),
+            "company_name": "Tactical Wholesale Partners",
+            "contact_name": "Robert Smith",
+            "phone": "555-111-2222",
+            "address": "999 Wholesale District",
+            "license_number": "TWP-123456789",
+            "is_approved": True,
+            "is_active": True
+        },
+        {
+            "email": "admin@tactical-supply.com", 
+            "password": hash_password("dealer123"),
+            "company_name": "Tactical Supply Co",
+            "contact_name": "Lisa Anderson",
+            "phone": "555-333-4444",
+            "address": "888 Supply Chain Ave",
+            "license_number": "TSC-987654321",
+            "is_approved": True,
+            "is_active": True
+        }
+    ]
+    
+    for dealer_data in sample_dealers:
+        dealer_dict = {k: v for k, v in dealer_data.items() if k != "password"}
+        dealer = Dealer(**dealer_dict)
+        dealer_with_password = dealer.dict()
+        dealer_with_password["password"] = dealer_data["password"]
+        await db.dealers.insert_one(dealer_with_password)
+    
+    # Create some sample quotes for demo
+    users = await db.users.find().to_list(length=None)
+    if users:
+        sample_quotes = [
+            {
+                "user_id": users[0]["id"],
+                "items": [
+                    {"product_id": "sample-1", "quantity": 2, "price": 299.99, "notes": "Tactical Plate Carrier Vest - 5.11 Tactical"},
+                    {"product_id": "sample-2", "quantity": 1, "price": 189.99, "notes": "Combat Tactical Boots - 5.11 Tactical"}
+                ],
+                "total_amount": 789.97,
+                "project_name": "Security Team Upgrade Q1",
+                "intended_use": "security_services",
+                "delivery_date": datetime.now(timezone.utc) + timedelta(days=30),
+                "delivery_address": "123 Business Street, Security City, CA 90210",
+                "billing_address": "123 Business Street, Security City, CA 90210",
+                "company_size": "51-200",
+                "budget_range": "$5000-$15000",
+                "additional_requirements": "Need training materials and bulk pricing for team of 12",
+                "status": "pending"
+            },
+            {
+                "user_id": users[1]["id"] if len(users) > 1 else users[0]["id"],
+                "items": [
+                    {"product_id": "sample-3", "quantity": 5, "price": 449.99, "notes": "Red Dot Sight Optic - Ops-Core"}
+                ],
+                "total_amount": 2249.95,
+                "project_name": "Precision Equipment Procurement",
+                "intended_use": "military",
+                "delivery_date": datetime.now(timezone.utc) + timedelta(days=14),
+                "delivery_address": "456 Government Ave, Washington, DC 20001",
+                "billing_address": "456 Government Ave, Washington, DC 20001",
+                "company_size": "1000+",
+                "budget_range": "$15000-$50000",
+                "additional_requirements": "Requires security clearance verification",
+                "status": "approved",
+                "admin_notes": "Approved for immediate processing. Contact procurement officer for delivery coordination."
+            }
+        ]
+        
+        for quote_data in sample_quotes:
+            quote = Quote(**quote_data)
+            await db.quotes.insert_one(quote.dict())
+    
+    # Create sample chat messages
+    if users:
+        sample_messages = [
+            {
+                "user_id": users[0]["id"],
+                "sender_type": "user",
+                "sender_name": "John Doe",
+                "message": "Hello, I have a question about bulk pricing for tactical vests."
+            },
+            {
+                "user_id": users[0]["id"],
+                "sender_type": "admin",
+                "sender_name": "Support Team",
+                "message": "Hi John! I'd be happy to help with bulk pricing. How many units are you looking at?"
+            },
+            {
+                "user_id": users[0]["id"],
+                "sender_type": "user", 
+                "sender_name": "John Doe",
+                "message": "We need approximately 15-20 plate carriers for our security team."
+            },
+            {
+                "user_id": users[0]["id"],
+                "sender_type": "admin",
+                "sender_name": "Support Team",
+                "message": "Perfect! For orders of 15+ units, we offer a 12% discount. I'll prepare a detailed quote for you."
+            }
+        ]
+        
+        for msg_data in sample_messages:
+            message = ChatMessage(**msg_data)
+            await db.chat_messages.insert_one(message.dict())
+    
+    return {
+        "message": "Sample users, dealers, quotes, and chat messages created successfully",
+        "users_created": len(sample_users),
+        "dealers_created": len(sample_dealers),
+        "quotes_created": 2,
+        "chat_messages_created": 4
+    }
+
 # User Authentication Endpoints
 @api_router.post("/users/register")
 async def register_user(user_data: UserCreate):
