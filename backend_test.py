@@ -2042,8 +2042,9 @@ class TacticalGearAPITester:
         product_tests = [categories_ok, brands_ok, products_ok, filtering_ok, specialized_ok, individual_ok, enhanced_products_ok]
         auth_tests = [user_auth_ok, dealer_auth_ok]
         b2b_tests = [cart_ok, quote_ok, chat_ok, enhanced_filtering_ok]
+        admin_tests = [admin_auth_ok, admin_management_ok, admin_dealer_mgmt_ok, admin_quote_mgmt_ok, admin_authorization_ok]
         
-        all_tests = core_tests + product_tests + auth_tests + b2b_tests
+        all_tests = core_tests + product_tests + auth_tests + b2b_tests + admin_tests
         passed_tests = sum(all_tests)
         total_tests = len(all_tests)
         
