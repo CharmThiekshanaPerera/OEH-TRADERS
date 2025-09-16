@@ -224,11 +224,11 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "2.0"
-  test_sequence: 5
+  version: "2.1"
+  test_sequence: 6
   run_ui: false
-  last_backend_test: "comprehensive_admin_panel_testing"
-  backend_test_suites_passed: "21/21"
+  last_backend_test: "admin_chat_system_testing"
+  backend_test_suites_passed: "22/22"
 
 test_plan:
   current_focus:
