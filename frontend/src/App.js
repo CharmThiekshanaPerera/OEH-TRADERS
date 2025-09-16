@@ -11,7 +11,8 @@ const AppContext = createContext();
 
 const AppProvider = ({ children }) => {
   const [dealer, setDealer] = useState(null);
-  const [user, setUser] = useState(null); // Add user state
+  const [user, setUser] = useState(null); 
+  const [admin, setAdmin] = useState(null); // Add admin state
   const [cart, setCart] = useState({ items: [], total: 0 });
   const [sessionId] = useState(() => Math.random().toString(36).substr(2, 9));
 
@@ -19,12 +20,16 @@ const AppProvider = ({ children }) => {
     // Check for stored tokens
     const dealerToken = localStorage.getItem('dealer_token');
     const userToken = localStorage.getItem('user_token');
+    const adminToken = localStorage.getItem('admin_token');
     
     if (dealerToken) {
       fetchDealerProfile(dealerToken);
     }
     if (userToken) {
       fetchUserProfile(userToken);
+    }
+    if (adminToken) {
+      fetchAdminProfile(adminToken);
     }
     
     // Load cart only if user is logged in
