@@ -2022,6 +2022,16 @@ class TacticalGearAPITester:
         # Test enhanced filtering
         enhanced_filtering_ok = self.test_enhanced_filtering()
         
+        print("\n🔑 Testing Admin Panel System...")
+        print("-" * 50)
+        
+        # Test admin authentication and management
+        admin_auth_ok = self.test_admin_authentication_system()
+        admin_management_ok = self.test_admin_management_endpoints()
+        admin_dealer_mgmt_ok = self.test_admin_dealer_management()
+        admin_quote_mgmt_ok = self.test_admin_quote_management()
+        admin_authorization_ok = self.test_admin_authorization()
+        
         # Summary
         print("\n" + "=" * 80)
         print("📊 COMPREHENSIVE B2B BACKEND TEST SUMMARY")
