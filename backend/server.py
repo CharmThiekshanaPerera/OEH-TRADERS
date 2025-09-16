@@ -808,7 +808,7 @@ async def create_sample_users():
             "is_active": True
         },
         {
-            "email": "support@tacticalgear.com", 
+            "email": "support@oehtraders.com", 
             "password": hash_password("support123"),
             "username": "support",
             "is_super_admin": False,
