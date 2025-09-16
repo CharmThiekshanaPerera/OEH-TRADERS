@@ -3278,7 +3278,7 @@ const Terms = () => (
         <div className="space-y-6">
           <section>
             <h2 className="text-2xl font-bold mb-4">1. Agreement to Terms</h2>
-            <p>By accessing and using TacticalGear services, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
+            <p>By accessing and using OEH TRADERS services, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
           </section>
           
           <section>
