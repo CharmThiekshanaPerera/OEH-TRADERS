@@ -276,14 +276,16 @@ async def initialize_sample_data():
         category = Category(**cat)
         await db.categories.insert_one(category.dict())
     
-    # Sample brands
+    # Sample brands with tactical logo placeholders
     brands = [
-        {"name": "5.11 Tactical", "logo_url": "https://via.placeholder.com/150x60/1a1a1a/ffffff?text=5.11", "description": "Professional tactical gear and apparel"},
-        {"name": "Blackhawk", "logo_url": "https://via.placeholder.com/150x60/000000/ffffff?text=BLACKHAWK", "description": "Military and law enforcement equipment"},
-        {"name": "Crye Precision", "logo_url": "https://via.placeholder.com/150x60/2d2d2d/ffffff?text=CRYE", "description": "Advanced combat systems and gear"},
-        {"name": "Oakley SI", "logo_url": "https://via.placeholder.com/150x60/1a1a1a/ffffff?text=OAKLEY", "description": "Standard Issue tactical eyewear and gear"},
-        {"name": "Condor Outdoor", "logo_url": "https://via.placeholder.com/150x60/0f0f0f/ffffff?text=CONDOR", "description": "Tactical gear and outdoor equipment"},
-        {"name": "Ops-Core", "logo_url": "https://via.placeholder.com/150x60/333333/ffffff?text=OPS-CORE", "description": "Advanced helmet and protection systems"}
+        {"name": "5.11 Tactical", "logo_url": "https://images.unsplash.com/photo-1753723883109-a575c639c0a3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwyfHx0YWN0aWNhbCUyMGdlYXIlMjBsb2dvc3xlbnwwfHx8fDE3NTgwMDMyNTF8MA&ixlib=rb-4.1.0&q=85", "description": "Professional tactical gear and apparel"},
+        {"name": "Blackhawk", "logo_url": "https://images.unsplash.com/photo-1636136370671-7ec07f284a2f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHx0YWN0aWNhbHxlbnwwfHx8fDE3NTgwMDMyNzR8MA&ixlib=rb-4.1.0&q=85", "description": "Military and law enforcement equipment"},
+        {"name": "Crye Precision", "logo_url": "https://images.unsplash.com/photo-1655706443789-7682c46bcb8b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwzfHxtaWxpdGFyeSUyMGxvZ29zfGVufDB8fHx8MTc1ODAwMzI3MHww&ixlib=rb-4.1.0&q=85", "description": "Advanced combat systems and gear"},
+        {"name": "Oakley SI", "logo_url": "https://images.unsplash.com/photo-1711097658585-73d97ef42bf6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwxfHxtaWxpdGFyeSUyMGxvZ29zfGVufDB8fHx8MTc1ODAwMzI3MHww&ixlib=rb-4.1.0&q=85", "description": "Standard Issue tactical eyewear and gear"},
+        {"name": "Condor Outdoor", "logo_url": "https://via.placeholder.com/200x80/2d2d2d/ffffff?text=CONDOR+TACTICAL", "description": "Tactical gear and outdoor equipment"},
+        {"name": "Ops-Core", "logo_url": "https://via.placeholder.com/200x80/1a1a1a/ffffff?text=OPS-CORE", "description": "Advanced helmet and protection systems"},
+        {"name": "Safariland", "logo_url": "https://via.placeholder.com/200x80/333333/ffffff?text=SAFARILAND", "description": "Law enforcement holsters and duty gear"},
+        {"name": "Mechanix Wear", "logo_url": "https://via.placeholder.com/200x80/dc2626/ffffff?text=MECHANIX", "description": "Professional work and tactical gloves"}
     ]
     
     for brand in brands:
