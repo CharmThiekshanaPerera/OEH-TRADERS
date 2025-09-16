@@ -205,7 +205,7 @@ const useApp = () => useContext(AppContext);
 // Navigation Component
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { dealer, user, cart, logout } = useApp();
+  const { dealer, user, admin, cart, logout } = useApp();
   const navigate = useNavigate();
   
   return (
@@ -232,6 +232,29 @@ const Navigation = () => {
           
           {/* Cart and Auth */}
           <div className="flex items-center space-x-4">
+            {/* Admin Panel Access */}
+            {admin ? (
+              <div className="relative group">
+                <button className="flex items-center space-x-2 hover:text-red-400 bg-red-600 px-3 py-1 rounded">
+                  <span>👑 Admin: {admin.username}</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                  <Link to="/admin/dashboard" className="block px-4 py-2 hover:bg-gray-100">Dashboard</Link>
+                  <button onClick={logout} className="w-full text-left px-4 py-2 hover:bg-gray-100">Logout</button>
+                </div>
+              </div>
+            ) : (
+              !user && !dealer && (
+                <Link to="/admin/login" className="text-xs text-gray-400 hover:text-white transition-colors">
+                  Admin
+                </Link>
+              )
+            )}
+
+            {/* Cart */}
             <button 
               onClick={() => user ? navigate('/cart') : navigate('/user-login')}
               className="relative hover:text-red-400 transition-colors"
@@ -263,9 +286,11 @@ const Navigation = () => {
                 </div>
               </div>
             ) : (
-              <Link to="/user-login" className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors">
-                Login
-              </Link>
+              !admin && (
+                <Link to="/user-login" className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors">
+                  Login
+                </Link>
+              )
             )}
             
             {/* Dealer Login - separate */}
@@ -284,9 +309,11 @@ const Navigation = () => {
                 </div>
               </div>
             ) : (
-              <Link to="/dealer-login" className="text-sm hover:text-red-400 transition-colors">
-                Dealer Portal
-              </Link>
+              !admin && (
+                <Link to="/dealer-login" className="text-sm hover:text-red-400 transition-colors">
+                  Dealer Portal
+                </Link>
+              )
             )}
             
             {/* Mobile menu button */}
@@ -313,8 +340,11 @@ const Navigation = () => {
               <Link to="/brands" className="block hover:text-red-400 transition-colors py-2">Brands</Link>
               <Link to="/about" className="block hover:text-red-400 transition-colors py-2">About</Link>
               <Link to="/contact" className="block hover:text-red-400 transition-colors py-2">Contact</Link>
-              {!user && (
+              {!user && !admin && (
                 <Link to="/user-login" className="block hover:text-red-400 transition-colors py-2">Login</Link>
+              )}
+              {!admin && (
+                <Link to="/admin/login" className="block hover:text-red-400 transition-colors py-2">Admin</Link>
               )}
             </div>
           </div>
