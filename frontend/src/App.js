@@ -3298,7 +3298,7 @@ const Terms = () => (
           
           <section>
             <h2 className="text-2xl font-bold mb-4">5. Limitation of Liability</h2>
-            <p>TacticalGear shall not be liable for any indirect, incidental, special, or consequential damages arising from the use of our products or services.</p>
+            <p>OEH TRADERS shall not be liable for any indirect, incidental, special, or consequential damages arising from the use of our products or services.</p>
           </section>
         </div>
       </div>
