@@ -671,6 +671,8 @@ const NewArrivals = ({ products }) => {
     </section>
   );
 };
+
+const TacticalExperts = () => (
   <section className="py-16 bg-black text-white">
     <div className="max-w-7xl mx-auto px-4">
       <h2 className="text-4xl font-bold text-center mb-12">TACTICAL EXPERTS</h2>
