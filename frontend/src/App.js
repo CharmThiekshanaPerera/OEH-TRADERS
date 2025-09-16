@@ -167,18 +167,32 @@ const AppProvider = ({ children }) => {
     }
   };
 
+  const loginAdmin = async (username, password) => {
+    try {
+      const response = await axios.post(`${API}/admin/login`, { username, password });
+      const { access_token, admin: adminData } = response.data;
+      localStorage.setItem('admin_token', access_token);
+      setAdmin(adminData);
+      return { success: true, admin: adminData };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.detail || 'Login failed' };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('dealer_token');
     localStorage.removeItem('user_token');
+    localStorage.removeItem('admin_token');
     setDealer(null);
     setUser(null);
+    setAdmin(null);
     setCart({ items: [], total: 0 });
   };
 
   return (
     <AppContext.Provider value={{
-      dealer, user, cart, sessionId, 
-      loginDealer, loginUser, registerDealer, registerUser, logout, 
+      dealer, user, admin, cart, sessionId, 
+      loginDealer, loginUser, loginAdmin, registerDealer, registerUser, logout, 
       addToCart, removeFromCart, fetchCart
     }}>
       {children}
