@@ -60,6 +60,17 @@ const AppProvider = ({ children }) => {
     }
   };
 
+  const fetchAdminProfile = async (token) => {
+    try {
+      const response = await axios.get(`${API}/admin/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAdmin(response.data);
+    } catch (error) {
+      localStorage.removeItem('admin_token');
+    }
+  };
+
   const fetchCart = async () => {
     const userToken = localStorage.getItem('user_token');
     if (!userToken) {
