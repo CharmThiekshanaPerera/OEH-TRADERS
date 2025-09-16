@@ -255,7 +255,41 @@ class QuoteResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-# Chat System Models
+# Admin Authentication Models
+class Admin(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: EmailStr
+    username: str
+    is_super_admin: bool = False
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class AdminLogin(BaseModel):
+    username: str
+    password: str
+
+class AdminResponse(BaseModel):
+    id: str
+    email: EmailStr
+    username: str
+    is_super_admin: bool
+
+async def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Admin:
+    token_data = verify_jwt_token(credentials.credentials)
+    if not token_data or token_data["user_type"] != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired admin token"
+        )
+    
+    admin = await db.admins.find_one({"id": token_data["user_id"], "is_active": True})
+    if not admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Admin not found or inactive"
+        )
+    
+    return Admin(**admin)
 class ChatMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
