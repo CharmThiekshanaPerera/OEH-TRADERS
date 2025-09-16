@@ -11,18 +11,26 @@ const AppContext = createContext();
 
 const AppProvider = ({ children }) => {
   const [dealer, setDealer] = useState(null);
+  const [user, setUser] = useState(null); // Add user state
   const [cart, setCart] = useState({ items: [], total: 0 });
   const [sessionId] = useState(() => Math.random().toString(36).substr(2, 9));
 
   useEffect(() => {
-    // Check for stored token
-    const token = localStorage.getItem('dealer_token');
-    if (token) {
-      fetchDealerProfile(token);
+    // Check for stored tokens
+    const dealerToken = localStorage.getItem('dealer_token');
+    const userToken = localStorage.getItem('user_token');
+    
+    if (dealerToken) {
+      fetchDealerProfile(dealerToken);
+    }
+    if (userToken) {
+      fetchUserProfile(userToken);
     }
     
-    // Load cart
-    fetchCart();
+    // Load cart only if user is logged in
+    if (userToken) {
+      fetchCart();
+    }
   }, []);
 
   const fetchDealerProfile = async (token) => {
@@ -36,40 +44,71 @@ const AppProvider = ({ children }) => {
     }
   };
 
-  const fetchCart = async () => {
+  const fetchUserProfile = async (token) => {
     try {
-      const response = await axios.get(`${API}/cart/${sessionId}`);
+      const response = await axios.get(`${API}/users/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser(response.data);
+    } catch (error) {
+      localStorage.removeItem('user_token');
+    }
+  };
+
+  const fetchCart = async () => {
+    const userToken = localStorage.getItem('user_token');
+    if (!userToken) {
+      setCart({ items: [], total: 0 });
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${API}/cart`, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
       setCart(response.data);
     } catch (error) {
       console.error('Error fetching cart:', error);
+      setCart({ items: [], total: 0 });
     }
   };
 
   const addToCart = async (productId, quantity = 1) => {
+    const userToken = localStorage.getItem('user_token');
+    if (!userToken) {
+      return { success: false, error: 'Please login to add items to cart' };
+    }
+
     try {
       await axios.post(`${API}/cart/add`, {
         product_id: productId,
-        quantity,
-        session_id: sessionId
+        quantity
+      }, {
+        headers: { Authorization: `Bearer ${userToken}` }
       });
       fetchCart();
-      return true;
+      return { success: true };
     } catch (error) {
       console.error('Error adding to cart:', error);
-      return false;
+      return { success: false, error: error.response?.data?.detail || 'Error adding to cart' };
     }
   };
 
   const removeFromCart = async (productId) => {
+    const userToken = localStorage.getItem('user_token');
+    if (!userToken) return;
+
     try {
-      await axios.delete(`${API}/cart/${sessionId}/item/${productId}`);
+      await axios.delete(`${API}/cart/item/${productId}`, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
       fetchCart();
     } catch (error) {
       console.error('Error removing from cart:', error);
     }
   };
 
-  const login = async (email, password) => {
+  const loginDealer = async (email, password) => {
     try {
       const response = await axios.post(`${API}/dealers/login`, { email, password });
       const { access_token, dealer: dealerData } = response.data;
@@ -81,7 +120,20 @@ const AppProvider = ({ children }) => {
     }
   };
 
-  const register = async (dealerData) => {
+  const loginUser = async (email, password) => {
+    try {
+      const response = await axios.post(`${API}/users/login`, { email, password });
+      const { access_token, user: userData } = response.data;
+      localStorage.setItem('user_token', access_token);
+      setUser(userData);
+      fetchCart(); // Load cart after user login
+      return { success: true, user: userData };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.detail || 'Login failed' };
+    }
+  };
+
+  const registerDealer = async (dealerData) => {
     try {
       await axios.post(`${API}/dealers/register`, dealerData);
       return { success: true };
@@ -90,14 +142,28 @@ const AppProvider = ({ children }) => {
     }
   };
 
+  const registerUser = async (userData) => {
+    try {
+      await axios.post(`${API}/users/register`, userData);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.detail || 'Registration failed' };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('dealer_token');
+    localStorage.removeItem('user_token');
     setDealer(null);
+    setUser(null);
+    setCart({ items: [], total: 0 });
   };
 
   return (
     <AppContext.Provider value={{
-      dealer, cart, sessionId, login, register, logout, addToCart, removeFromCart, fetchCart
+      dealer, user, cart, sessionId, 
+      loginDealer, loginUser, registerDealer, registerUser, logout, 
+      addToCart, removeFromCart, fetchCart
     }}>
       {children}
     </AppContext.Provider>
