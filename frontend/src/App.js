@@ -2169,7 +2169,8 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
-            <Route path="/login" element={<DealerLogin />} />
+            <Route path="/user-login" element={<UserLogin />} />
+            <Route path="/dealer-login" element={<DealerLogin />} />
             <Route path="/cart" element={<ShoppingCart />} />
           </Routes>
           <Footer />
