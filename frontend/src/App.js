@@ -631,7 +631,8 @@ const CustomerTopPicks = ({ products }) => (
 // New Arrivals Carousel Component
 const NewArrivals = ({ products }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { addToCart } = useApp();
+  const { addToCart, user } = useApp();
+  const navigate = useNavigate();
   
   const itemsPerView = {
     mobile: 1,
