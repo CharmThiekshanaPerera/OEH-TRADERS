@@ -3217,7 +3217,7 @@ const Contact = () => (
             </div>
             <div>
               <h3 className="font-semibold">Email</h3>
-              <p className="text-gray-600">info@tacticalgear.com</p>
+              <p className="text-gray-600">info@oehtraders.com</p>
             </div>
             <div>
               <h3 className="font-semibold">Address</h3>
