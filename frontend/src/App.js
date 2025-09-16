@@ -2779,6 +2779,9 @@ function App() {
             <Route path="/user-login" element={<UserLogin />} />
             <Route path="/dealer-login" element={<DealerLogin />} />
             <Route path="/cart" element={<ShoppingCart />} />
+            <Route path="/quote-checkout" element={<QuoteCheckout />} />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/chat" element={<ChatInterface />} />
           </Routes>
           <Footer />
         </AppProvider>
