@@ -448,7 +448,229 @@ const CustomerTopPicks = ({ products }) => (
   </section>
 );
 
-const TacticalExperts = () => (
+// New Arrivals Carousel Component
+const NewArrivals = ({ products }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const { addToCart } = useApp();
+  
+  const itemsPerView = {
+    mobile: 1,
+    tablet: 2, 
+    desktop: 3
+  };
+  
+  const [itemsToShow, setItemsToShow] = useState(itemsPerView.desktop);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setItemsToShow(itemsPerView.mobile);
+      } else if (window.innerWidth < 1024) {
+        setItemsToShow(itemsPerView.tablet);
+      } else {
+        setItemsToShow(itemsPerView.desktop);
+      }
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  const maxIndex = Math.max(0, products.length - itemsToShow);
+  
+  const nextSlide = () => {
+    setCurrentIndex(prev => (prev >= maxIndex ? 0 : prev + 1));
+  };
+  
+  const prevSlide = () => {
+    setCurrentIndex(prev => (prev <= 0 ? maxIndex : prev - 1));
+  };
+  
+  const handleAddToCart = async (productId) => {
+    const success = await addToCart(productId);
+    if (success) {
+      alert('Product added to cart!');
+    } else {
+      alert('Error adding product to cart');
+    }
+  };
+  
+  if (!products || products.length === 0) {
+    return null;
+  }
+  
+  return (
+    <section className="py-16 bg-gradient-to-br from-gray-900 to-black text-white">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold mb-4">NEW ARRIVALS</h2>
+          <p className="text-xl text-gray-300">Latest tactical gear and equipment</p>
+          <div className="w-24 h-1 bg-red-500 mx-auto mt-4"></div>
+        </div>
+        
+        <div className="relative">
+          {/* Carousel Container */}
+          <div className="overflow-hidden">
+            <div 
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ 
+                transform: `translateX(-${currentIndex * (100 / itemsToShow)}%)`,
+                width: `${(products.length / itemsToShow) * 100}%`
+              }}
+            >
+              {products.map((product) => (
+                <div 
+                  key={product.id}
+                  className="px-3"
+                  style={{ width: `${100 / products.length}%` }}
+                >
+                  <div className="bg-white text-black rounded-lg shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div className="relative">
+                      <img 
+                        src={product.image_url} 
+                        alt={product.name}
+                        className="w-full h-64 object-cover"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                          NEW
+                        </span>
+                      </div>
+                      <div className="absolute top-4 right-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          product.in_stock ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                        }`}>
+                          {product.in_stock ? 'IN STOCK' : 'OUT OF STOCK'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6">
+                      <div className="mb-2">
+                        <h3 className="text-xl font-bold mb-1 line-clamp-2">{product.name}</h3>
+                        <p className="text-gray-600 text-sm font-medium">{product.brand}</p>
+                      </div>
+                      
+                      <p className="text-gray-700 text-sm mb-4 line-clamp-2">
+                        {product.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-1">
+                          <div className="flex text-yellow-400">
+                            {[...Array(5)].map((_, i) => (
+                              <span key={i} className={i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}>
+                                ★
+                              </span>
+                            ))}
+                          </div>
+                          <span className="text-gray-600 text-sm">({product.review_count})</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-2xl font-bold text-red-600">${product.price}</span>
+                            {product.original_price && (
+                              <span className="text-sm line-through text-gray-400">
+                                ${product.original_price}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {product.features && product.features.length > 0 && (
+                        <div className="mb-4">
+                          <p className="text-sm font-semibold mb-2">Key Features:</p>
+                          <ul className="text-sm text-gray-600 space-y-1">
+                            {product.features.slice(0, 2).map((feature, idx) => (
+                              <li key={idx} className="flex items-center">
+                                <span className="w-1 h-1 bg-red-500 rounded-full mr-2"></span>
+                                {feature}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={() => handleAddToCart(product.id)}
+                          disabled={!product.in_stock}
+                          className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          {product.in_stock ? 'Add to Cart' : 'Out of Stock'}
+                        </button>
+                        <button className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Navigation Arrows */}
+          {products.length > itemsToShow && (
+            <>
+              <button
+                onClick={prevSlide}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-10"
+                aria-label="Previous slide"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={nextSlide}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-10"
+                aria-label="Next slide"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+          
+          {/* Dots Indicator */}
+          {products.length > itemsToShow && (
+            <div className="flex justify-center mt-8 space-x-2">
+              {[...Array(maxIndex + 1)].map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentIndex 
+                      ? 'bg-red-500 scale-125' 
+                      : 'bg-gray-400 hover:bg-gray-300'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* View All Button */}
+        <div className="text-center mt-8">
+          <Link 
+            to="/products" 
+            className="inline-block bg-transparent border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-8 py-3 rounded-lg font-semibold transition-all duration-300"
+          >
+            View All New Arrivals
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+};
   <section className="py-16 bg-black text-white">
     <div className="max-w-7xl mx-auto px-4">
       <h2 className="text-4xl font-bold text-center mb-12">TACTICAL EXPERTS</h2>
