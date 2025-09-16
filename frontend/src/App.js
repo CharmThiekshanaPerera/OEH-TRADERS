@@ -2992,7 +2992,7 @@ const ChatInterface = () => {
 const About = () => (
   <div className="min-h-screen bg-gray-50 pt-16">
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold text-center mb-12">About TacticalGear</h1>
+      <h1 className="text-4xl font-bold text-center mb-12">About OEH TRADERS</h1>
       
       {/* Company Overview */}
       <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
