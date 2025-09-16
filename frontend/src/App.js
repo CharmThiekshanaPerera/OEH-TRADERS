@@ -1009,7 +1009,8 @@ const Products = () => {
     inStock: ''
   });
   const [loading, setLoading] = useState(true);
-  const { addToCart } = useApp();
+  const { addToCart, user } = useApp();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
