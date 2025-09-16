@@ -1219,11 +1219,51 @@ async def get_chat_messages(user_id: str, current_user: User = Depends(get_curre
     return [ChatMessage(**{k: v for k, v in msg.items() if k != "_id"}) for msg in messages]
 
 @api_router.post("/admin/chat/send")
-async def admin_send_message(message_data: ChatMessageCreate):
-    # In a real application, you'd add admin authentication here
-    message = ChatMessage(**message_data.dict())
+async def admin_send_message(message_data: ChatMessageCreate, current_admin: Admin = Depends(get_current_admin)):
+    # Admin sends message with proper authentication
+    message = ChatMessage(
+        user_id=message_data.user_id,
+        sender_type="admin",
+        sender_name=f"Admin ({current_admin.username})",
+        message=message_data.message
+    )
     await db.chat_messages.insert_one(message.dict())
     return {"message": "Admin message sent successfully"}
+
+@api_router.get("/admin/chat/conversations")
+async def get_all_conversations(current_admin: Admin = Depends(get_current_admin)):
+    """Get all chat conversations with users"""
+    # Get unique user IDs who have sent messages
+    pipeline = [
+        {"$group": {"_id": "$user_id", "last_message": {"$last": "$$ROOT"}, "message_count": {"$sum": 1}}},
+        {"$sort": {"last_message.created_at": -1}}
+    ]
+    
+    conversations = await db.chat_messages.aggregate(pipeline).to_list(length=None)
+    
+    # Enrich with user data
+    enriched_conversations = []
+    for conv in conversations:
+        user = await db.users.find_one({"id": conv["_id"]})
+        if user:
+            enriched_conversations.append({
+                "user_id": conv["_id"],
+                "user_name": f"{user['first_name']} {user['last_name']}",
+                "user_email": user["email"],
+                "company_name": user.get("company_name", ""),
+                "last_message": conv["last_message"]["message"],
+                "last_message_time": conv["last_message"]["created_at"],
+                "last_sender": conv["last_message"]["sender_type"],
+                "message_count": conv["message_count"]
+            })
+    
+    return enriched_conversations
+
+@api_router.get("/admin/chat/{user_id}/messages")
+async def get_user_chat_messages(user_id: str, current_admin: Admin = Depends(get_current_admin)):
+    """Get all messages for a specific user conversation"""
+    messages = await db.chat_messages.find({"user_id": user_id}).sort("created_at", 1).to_list(length=None)
+    return [ChatMessage(**{k: v for k, v in msg.items() if k != "_id"}) for msg in messages]
 
 # Enhanced Product endpoints with stock filtering (existing)
 @api_router.get("/products", response_model=List[Product])
