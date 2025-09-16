@@ -733,6 +733,12 @@ async def get_deals():
     products = await db.products.find({"original_price": {"$exists": True, "$ne": None}}).limit(6).to_list(length=None)
     return [Product(**product) for product in products]
 
+@api_router.get("/products/new-arrivals", response_model=List[Product])
+async def get_new_arrivals():
+    # Get products sorted by creation date (newest first)
+    products = await db.products.find({}).sort("created_at", -1).limit(8).to_list(length=None)
+    return [Product(**product) for product in products]
+
 @api_router.get("/products/{product_id}", response_model=Product)
 async def get_product(product_id: str):
     product = await db.products.find_one({"id": product_id})
