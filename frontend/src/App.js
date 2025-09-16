@@ -3000,7 +3000,7 @@ const About = () => (
           <div>
             <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
             <p className="text-lg mb-6">
-              TacticalGear is your premier destination for professional tactical equipment, serving military personnel, 
+              OEH TRADERS is your premier destination for professional tactical equipment, serving military personnel, 
               law enforcement officers, and civilian customers worldwide. With over a decade of experience, we understand 
               the critical importance of reliable, high-quality gear in demanding situations.
             </p>
