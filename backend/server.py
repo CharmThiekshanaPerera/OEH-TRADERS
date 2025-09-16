@@ -938,7 +938,94 @@ async def login_dealer(login_data: DealerLogin):
 async def get_dealer_profile(current_dealer: Dealer = Depends(get_current_dealer)):
     return DealerResponse(**current_dealer.dict())
 
-# Enhanced Shopping Cart Endpoints (User-based)
+# Admin Authentication Endpoints
+@api_router.post("/admin/login")
+async def login_admin(login_data: AdminLogin):
+    admin = await db.admins.find_one({"username": login_data.username})
+    if not admin or not verify_password(login_data.password, admin["password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password"
+        )
+    
+    if not admin["is_active"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin account is inactive"
+        )
+    
+    token = create_jwt_token(admin["id"], "admin")
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "admin": AdminResponse(**admin)
+    }
+
+@api_router.get("/admin/profile", response_model=AdminResponse)
+async def get_admin_profile(current_admin: Admin = Depends(get_current_admin)):
+    return AdminResponse(**current_admin.dict())
+
+# Enhanced Admin Endpoints for Dealer Management
+@api_router.get("/admin/dealers/pending")
+async def get_pending_dealers(current_admin: Admin = Depends(get_current_admin)):
+    """Get all dealers pending approval"""
+    dealers = await db.dealers.find({"is_approved": False, "is_active": True}).to_list(length=None)
+    return [DealerResponse(**{k: v for k, v in dealer.items() if k != "_id" and k != "password"}) for dealer in dealers]
+
+@api_router.get("/admin/dealers")
+async def get_all_dealers(current_admin: Admin = Depends(get_current_admin)):
+    """Get all dealers with their status"""
+    dealers = await db.dealers.find().to_list(length=None)
+    return [DealerResponse(**{k: v for k, v in dealer.items() if k != "_id" and k != "password"}) for dealer in dealers]
+
+@api_router.put("/admin/dealers/{dealer_id}/approve")
+async def approve_dealer(dealer_id: str, current_admin: Admin = Depends(get_current_admin)):
+    """Approve a dealer registration"""
+    result = await db.dealers.update_one(
+        {"id": dealer_id},
+        {"$set": {"is_approved": True}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Dealer not found")
+    
+    return {"message": "Dealer approved successfully"}
+
+@api_router.put("/admin/dealers/{dealer_id}/reject")
+async def reject_dealer(dealer_id: str, current_admin: Admin = Depends(get_current_admin)):
+    """Reject a dealer registration"""
+    result = await db.dealers.update_one(
+        {"id": dealer_id},
+        {"$set": {"is_active": False}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Dealer not found")
+    
+    return {"message": "Dealer rejected successfully"}
+
+# Enhanced Admin Endpoints for User Management
+@api_router.get("/admin/users")
+async def get_all_users(current_admin: Admin = Depends(get_current_admin)):
+    """Get all users"""
+    users = await db.users.find().to_list(length=None)
+    return [UserResponse(**{k: v for k, v in user.items() if k != "_id" and k != "password"}) for user in users]
+
+@api_router.get("/admin/stats")
+async def get_admin_stats(current_admin: Admin = Depends(get_current_admin)):
+    """Get admin dashboard statistics"""
+    stats = {
+        "total_users": await db.users.count_documents({}),
+        "total_dealers": await db.dealers.count_documents({}),
+        "pending_dealers": await db.dealers.count_documents({"is_approved": False, "is_active": True}),
+        "approved_dealers": await db.dealers.count_documents({"is_approved": True, "is_active": True}),
+        "total_quotes": await db.quotes.count_documents({}),
+        "pending_quotes": await db.quotes.count_documents({"status": "pending"}),
+        "approved_quotes": await db.quotes.count_documents({"status": "approved"}),
+        "total_products": await db.products.count_documents({}),
+        "chat_messages": await db.chat_messages.count_documents({})
+    }
+    return stats
 @api_router.post("/cart/add")
 async def add_to_cart(request: AddToCartRequest, current_user: User = Depends(get_current_user)):
     # Check if product exists and is in stock
