@@ -801,7 +801,7 @@ async def create_sample_users():
     # Create sample admin accounts
     sample_admins = [
         {
-            "email": "admin@tacticalgear.com",
+            "email": "admin@oehtraders.com",
             "password": hash_password("admin123"),
             "username": "admin",
             "is_super_admin": True,
