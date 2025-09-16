@@ -1689,31 +1689,34 @@ const DealerLogin = () => {
   );
 };
 
-// Shopping Cart Page
+// Shopping Cart Page with Quote Checkout
 const ShoppingCart = () => {
-  const { cart, removeFromCart, sessionId } = useApp();
+  const { cart, removeFromCart, user } = useApp();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleCheckout = async () => {
-    if (cart.items.length === 0) return;
-    
-    setLoading(true);
-    try {
-      const response = await axios.post(`${API}/orders`, {
-        session_id: sessionId,
-        shipping_address: "123 Main St, City, State 12345",
-        billing_address: "123 Main St, City, State 12345"
-      });
-      
-      alert(`Order created successfully! Order ID: ${response.data.order_id}`);
-      navigate('/');
-    } catch (error) {
-      alert('Error creating order. Please try again.');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!user) {
+      navigate('/user-login');
     }
+  }, [user, navigate]);
+
+  const handleProceedToQuote = () => {
+    if (cart.items.length === 0) {
+      alert('Your cart is empty');
+      return;
+    }
+    navigate('/quote-checkout');
   };
+
+  if (!user) {
+    return <div className="min-h-screen pt-16 flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-2xl font-semibold mb-4">Please login to view your cart</h2>
+        <Link to="/user-login" className="bg-red-600 text-white px-6 py-3 rounded-lg">Login</Link>
+      </div>
+    </div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
@@ -1763,38 +1766,642 @@ const ShoppingCart = () => {
             
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+                <h2 className="text-xl font-semibold mb-4">Quote Summary</h2>
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
                     <span>${cart.total?.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Shipping:</span>
-                    <span>Free</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tax:</span>
-                    <span>${(cart.total * 0.08).toFixed(2)}</span>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Items:</span>
+                    <span>{cart.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
                   </div>
                   <div className="border-t pt-2">
                     <div className="flex justify-between font-semibold text-lg">
-                      <span>Total:</span>
-                      <span>${(cart.total * 1.08).toFixed(2)}</span>
+                      <span>Request Quote For:</span>
+                      <span>${cart.total?.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
+                
+                <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                  <h3 className="font-semibold text-blue-800 mb-2">B2B Quote Process</h3>
+                  <p className="text-sm text-blue-700">
+                    Submit a detailed quote request with your business requirements. 
+                    Our team will review and respond with customized pricing and terms.
+                  </p>
+                </div>
+                
                 <button
-                  onClick={handleCheckout}
+                  onClick={handleProceedToQuote}
                   disabled={loading}
                   className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 disabled:bg-gray-400"
                 >
-                  {loading ? 'Processing...' : 'Proceed to Checkout'}
+                  {loading ? 'Processing...' : 'Request Quote'}
                 </button>
+                
+                <Link 
+                  to="/products" 
+                  className="w-full mt-3 block text-center bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300"
+                >
+                  Continue Shopping
+                </Link>
               </div>
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+// Quote Checkout Form
+const QuoteCheckout = () => {
+  const { cart, user } = useApp();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    project_name: '',
+    intended_use: '',
+    delivery_date: '',
+    delivery_address: user?.address || '',
+    billing_address: user?.address || '',
+    company_size: '',
+    budget_range: '',
+    additional_requirements: ''
+  });
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/user-login');
+    }
+    if (!cart.items || cart.items.length === 0) {
+      navigate('/cart');
+    }
+  }, [user, cart, navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const userToken = localStorage.getItem('user_token');
+      const quoteData = {
+        user_id: user.id,
+        items: cart.items.map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: item.price,
+          notes: `${item.product?.name} - ${item.product?.brand}`
+        })),
+        ...formData,
+        delivery_date: formData.delivery_date ? new Date(formData.delivery_date).toISOString() : null
+      };
+
+      await axios.post(`${API}/quotes`, quoteData, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+
+      alert('Quote submitted successfully! We will review and contact you soon.');
+      navigate('/profile');
+    } catch (error) {
+      console.error('Error submitting quote:', error);
+      alert('Error submitting quote. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  if (!user || !cart.items || cart.items.length === 0) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-16">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Request Quote</h1>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-6">Quote Details</h2>
+              
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Project Name *</label>
+                  <input
+                    type="text"
+                    name="project_name"
+                    value={formData.project_name}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-3 border rounded-lg"
+                    placeholder="e.g., Security Team Equipment Upgrade"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Intended Use *</label>
+                  <select
+                    name="intended_use"
+                    value={formData.intended_use}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-3 border rounded-lg"
+                  >
+                    <option value="">Select intended use</option>
+                    <option value="law_enforcement">Law Enforcement</option>
+                    <option value="military">Military/Defense</option>
+                    <option value="security_services">Security Services</option>
+                    <option value="training">Training/Education</option>
+                    <option value="personal_protection">Personal Protection</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Required Delivery Date</label>
+                  <input
+                    type="date"
+                    name="delivery_date"
+                    value={formData.delivery_date}
+                    onChange={handleChange}
+                    className="w-full p-3 border rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Delivery Address *</label>
+                  <textarea
+                    name="delivery_address"
+                    value={formData.delivery_address}
+                    onChange={handleChange}
+                    required
+                    rows="3"
+                    className="w-full p-3 border rounded-lg"
+                    placeholder="Complete delivery address"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Billing Address *</label>
+                  <textarea
+                    name="billing_address"
+                    value={formData.billing_address}
+                    onChange={handleChange}
+                    required
+                    rows="3"
+                    className="w-full p-3 border rounded-lg"
+                    placeholder="Billing address (if different from delivery)"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Company Size</label>
+                    <select
+                      name="company_size"
+                      value={formData.company_size}
+                      onChange={handleChange}
+                      className="w-full p-3 border rounded-lg"
+                    >
+                      <option value="">Select size</option>
+                      <option value="1-10">1-10 employees</option>
+                      <option value="11-50">11-50 employees</option>
+                      <option value="51-200">51-200 employees</option>
+                      <option value="201-1000">201-1000 employees</option>
+                      <option value="1000+">1000+ employees</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Budget Range</label>
+                    <select
+                      name="budget_range"
+                      value={formData.budget_range}
+                      onChange={handleChange}
+                      className="w-full p-3 border rounded-lg"
+                    >
+                      <option value="">Select range</option>
+                      <option value="<$5000">Less than $5,000</option>
+                      <option value="$5000-$15000">$5,000 - $15,000</option>
+                      <option value="$15000-$50000">$15,000 - $50,000</option>
+                      <option value="$50000-$100000">$50,000 - $100,000</option>
+                      <option value="$100000+">$100,000+</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Additional Requirements</label>
+                  <textarea
+                    name="additional_requirements"
+                    value={formData.additional_requirements}
+                    onChange={handleChange}
+                    rows="4"
+                    className="w-full p-3 border rounded-lg"
+                    placeholder="Any special requirements, customizations, training needs, warranty preferences, etc."
+                  />
+                </div>
+
+                <div className="flex space-x-4">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+                  >
+                    {loading ? 'Submitting Quote...' : 'Submit Quote Request'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/cart')}
+                    className="px-6 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300"
+                  >
+                    Back to Cart
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Quote Summary</h2>
+              <div className="space-y-4">
+                {cart.items.map((item) => (
+                  <div key={item.product_id} className="flex justify-between text-sm">
+                    <div className="flex-1">
+                      <p className="font-medium">{item.product?.name}</p>
+                      <p className="text-gray-600">Qty: {item.quantity}</p>
+                    </div>
+                    <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                  </div>
+                ))}
+                
+                <div className="border-t pt-4">
+                  <div className="flex justify-between font-semibold text-lg">
+                    <span>Total Quote Value:</span>
+                    <span>${cart.total?.toFixed(2)}</span>
+                  </div>
+                </div>
+                
+                <div className="bg-yellow-50 p-4 rounded-lg mt-4">
+                  <h3 className="font-semibold text-yellow-800 mb-2">Note</h3>
+                  <p className="text-sm text-yellow-700">
+                    This is a quote request. Final pricing may vary based on volume, 
+                    customization requirements, and current market conditions.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// User Profile with Quote History
+const UserProfile = () => {
+  const { user, logout } = useApp();
+  const [quotes, setQuotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/user-login');
+      return;
+    }
+    fetchQuotes();
+  }, [user, navigate]);
+
+  const fetchQuotes = async () => {
+    try {
+      const userToken = localStorage.getItem('user_token');
+      const response = await axios.get(`${API}/quotes`, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+      setQuotes(response.data);
+    } catch (error) {
+      console.error('Error fetching quotes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'reviewed': return 'bg-blue-100 text-blue-800';
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'declined': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-16">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">User Profile</h1>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Information */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 bg-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-white">
+                    {user.first_name[0]}{user.last_name[0]}
+                  </span>
+                </div>
+                <h2 className="text-xl font-semibold">{user.first_name} {user.last_name}</h2>
+                <p className="text-gray-600">{user.email}</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Company</label>
+                  <p className="text-gray-900">{user.company_name || 'Not specified'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Phone</label>
+                  <p className="text-gray-900">{user.phone || 'Not specified'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Address</label>
+                  <p className="text-gray-900">
+                    {user.address ? `${user.address}, ${user.city}, ${user.state} ${user.zip_code}` : 'Not specified'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="mt-6 space-y-2">
+                <Link 
+                  to="/chat" 
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 block text-center"
+                >
+                  💬 Chat with Support
+                </Link>
+                <button 
+                  onClick={logout}
+                  className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Quote History */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-6">Quote Requests</h2>
+              
+              {loading ? (
+                <div className="text-center py-8">Loading quotes...</div>
+              ) : quotes.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-600 mb-4">No quotes submitted yet</p>
+                  <Link 
+                    to="/products" 
+                    className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700"
+                  >
+                    Browse Products
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {quotes.map((quote) => (
+                    <div key={quote.id} className="border rounded-lg p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-semibold">{quote.project_name}</h3>
+                          <p className="text-gray-600">
+                            Submitted: {new Date(quote.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(quote.status)}`}>
+                          {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm text-gray-600">Intended Use</p>
+                          <p className="font-medium">{quote.intended_use.replace('_', ' ').toUpperCase()}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Total Value</p>
+                          <p className="font-medium text-lg">${quote.total_amount.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Items</p>
+                          <p className="font-medium">{quote.items.length} products</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Delivery Date</p>
+                          <p className="font-medium">
+                            {quote.delivery_date ? new Date(quote.delivery_date).toLocaleDateString() : 'Flexible'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {quote.admin_notes && (
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <p className="text-sm font-medium text-blue-800 mb-1">Admin Notes:</p>
+                          <p className="text-blue-700">{quote.admin_notes}</p>
+                        </div>
+                      )}
+                      
+                      <div className="mt-4 flex space-x-2">
+                        <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                          View Details
+                        </button>
+                        {quote.status === 'approved' && (
+                          <Link 
+                            to="/chat" 
+                            className="text-green-600 hover:text-green-700 text-sm font-medium"
+                          >
+                            Discuss Order
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Chat Interface
+const ChatInterface = () => {
+  const { user } = useApp();
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/user-login');
+      return;
+    }
+    fetchMessages();
+  }, [user, navigate]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const userToken = localStorage.getItem('user_token');
+      const response = await axios.get(`${API}/chat/${user.id}`, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    const tempMessage = {
+      id: Date.now(),
+      sender_type: 'user',
+      sender_name: `${user.first_name} ${user.last_name}`,
+      message: newMessage,
+      created_at: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, tempMessage]);
+    setNewMessage('');
+
+    try {
+      const userToken = localStorage.getItem('user_token');
+      await axios.post(`${API}/chat/send`, {
+        user_id: user.id,
+        sender_type: 'user',
+        sender_name: `${user.first_name} ${user.last_name}`,
+        message: newMessage
+      }, {
+        headers: { Authorization: `Bearer ${userToken}` }
+      });
+      
+      // Refresh messages to get the actual stored message
+      fetchMessages();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Remove temp message on error
+      setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
+      alert('Failed to send message');
+    }
+  };
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-16">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow h-96 flex flex-col">
+          {/* Chat Header */}
+          <div className="bg-red-600 text-white p-4 rounded-t-lg">
+            <h2 className="text-xl font-semibold">Chat with Support</h2>
+            <p className="text-red-100">We're here to help with your tactical gear needs</p>
+          </div>
+
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {loading ? (
+              <div className="text-center py-8">Loading messages...</div>
+            ) : messages.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No messages yet. Start a conversation!</p>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.sender_type === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      message.sender_type === 'user'
+                        ? 'bg-red-600 text-white'
+                        : 'bg-gray-200 text-gray-800'
+                    }`}
+                  >
+                    <p className="text-sm font-medium mb-1">{message.sender_name}</p>
+                    <p>{message.message}</p>
+                    <p className="text-xs opacity-75 mt-1">
+                      {new Date(message.created_at).toLocaleTimeString()}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Message Input */}
+          <div className="border-t p-4">
+            <form onSubmit={sendMessage} className="flex space-x-2">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type your message..."
+                className="flex-1 p-2 border rounded-lg focus:outline-none focus:border-red-500"
+              />
+              <button
+                type="submit"
+                disabled={!newMessage.trim()}
+                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+              >
+                Send
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Chat Info */}
+        <div className="mt-6 bg-blue-50 p-4 rounded-lg">
+          <h3 className="font-semibold text-blue-800 mb-2">Support Information</h3>
+          <ul className="text-sm text-blue-700 space-y-1">
+            <li>• Our support team typically responds within 2-4 hours during business hours</li>
+            <li>• For urgent matters, please call: 1-800-TACTICAL</li>
+            <li>• Business hours: Monday-Friday 8AM-6PM EST</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
