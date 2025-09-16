@@ -1399,7 +1399,7 @@ class StatusCheckCreate(BaseModel):
 
 @api_router.get("/")
 async def root():
-    return {"message": "TacticalGear API v2.0 - B2B Platform with User Auth & Quote System"}
+    return {"message": "OEH TRADERS API v2.0 - B2B Platform with User Auth & Quote System"}
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
