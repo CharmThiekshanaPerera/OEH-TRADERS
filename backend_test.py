@@ -8,7 +8,7 @@ import time
 import uuid
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://gearup-tactical.preview.emergentagent.com/api"
+BACKEND_URL = "https://tacticaldealer.preview.emergentagent.com/api"
 
 class TacticalGearAPITester:
     def __init__(self):
