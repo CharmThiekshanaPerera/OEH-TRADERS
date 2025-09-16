@@ -3334,7 +3334,7 @@ const Privacy = () => (
           
           <section>
             <h2 className="text-2xl font-bold mb-4">Your Rights</h2>
-            <p>You have the right to access, update, or delete your personal information. Contact us at privacy@tacticalgear.com for assistance with privacy-related requests.</p>
+            <p>You have the right to access, update, or delete your personal information. Contact us at privacy@oehtraders.com for assistance with privacy-related requests.</p>
           </section>
         </div>
       </div>
