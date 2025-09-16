@@ -1347,6 +1347,541 @@ class TacticalGearAPITester:
         
         return tests_passed == total_tests
     
+    def test_admin_authentication_system(self):
+        """Test complete admin authentication system"""
+        tests_passed = 0
+        total_tests = 0
+        
+        # Test 1: Admin Login with super admin credentials
+        total_tests += 1
+        try:
+            admin_login = {
+                "username": "admin",
+                "password": "admin123"
+            }
+            
+            response = self.session.post(f"{self.base_url}/admin/login", json=admin_login)
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data and "admin" in data:
+                    self.admin_token = data["access_token"]
+                    admin_data = data["admin"]
+                    if admin_data.get("is_super_admin", False):
+                        self.log_test("Super Admin Login", True, f"Super admin logged in successfully: {admin_data['username']}")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Super Admin Login", False, "Admin logged in but not marked as super admin")
+                else:
+                    self.log_test("Super Admin Login", False, "Missing access_token or admin data", data)
+            else:
+                self.log_test("Super Admin Login", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Super Admin Login", False, f"Error: {str(e)}")
+        
+        # Test 2: Admin Login with regular admin credentials
+        total_tests += 1
+        try:
+            support_login = {
+                "username": "support",
+                "password": "support123"
+            }
+            
+            response = self.session.post(f"{self.base_url}/admin/login", json=support_login)
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data and "admin" in data:
+                    self.support_token = data["access_token"]
+                    admin_data = data["admin"]
+                    if not admin_data.get("is_super_admin", True):
+                        self.log_test("Regular Admin Login", True, f"Regular admin logged in successfully: {admin_data['username']}")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Regular Admin Login", False, "Admin logged in but marked as super admin")
+                else:
+                    self.log_test("Regular Admin Login", False, "Missing access_token or admin data", data)
+            else:
+                self.log_test("Regular Admin Login", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Regular Admin Login", False, f"Error: {str(e)}")
+        
+        # Test 3: Invalid admin credentials
+        total_tests += 1
+        try:
+            invalid_login = {
+                "username": "wrongadmin",
+                "password": "wrongpassword"
+            }
+            
+            response = self.session.post(f"{self.base_url}/admin/login", json=invalid_login)
+            if response.status_code == 401:
+                data = response.json()
+                if "invalid" in data.get("detail", "").lower():
+                    self.log_test("Invalid Admin Credentials", True, "Correctly rejected invalid admin credentials")
+                    tests_passed += 1
+                else:
+                    self.log_test("Invalid Admin Credentials", False, "Wrong error message for invalid credentials")
+            else:
+                self.log_test("Invalid Admin Credentials", False, f"Expected 401, got HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Invalid Admin Credentials", False, f"Error: {str(e)}")
+        
+        # Test 4: Admin Profile endpoint
+        total_tests += 1
+        try:
+            if hasattr(self, 'admin_token') and self.admin_token:
+                headers = {"Authorization": f"Bearer {self.admin_token}"}
+                response = self.session.get(f"{self.base_url}/admin/profile", headers=headers)
+                if response.status_code == 200:
+                    profile = response.json()
+                    required_fields = ["id", "email", "username", "is_super_admin"]
+                    missing_fields = [field for field in required_fields if field not in profile]
+                    
+                    if not missing_fields:
+                        self.log_test("Admin Profile", True, f"Admin profile retrieved: {profile['username']} (super: {profile['is_super_admin']})")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Admin Profile", False, f"Missing required fields: {missing_fields}")
+                else:
+                    self.log_test("Admin Profile", False, f"HTTP {response.status_code}", response.text)
+            else:
+                self.log_test("Admin Profile", False, "No admin token available")
+        except Exception as e:
+            self.log_test("Admin Profile", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
+    def test_admin_management_endpoints(self):
+        """Test admin management endpoints"""
+        tests_passed = 0
+        total_tests = 0
+        
+        if not hasattr(self, 'admin_token') or not self.admin_token:
+            self.log_test("Admin Management Setup", False, "No admin token available for management testing")
+            return False
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Test 1: Admin Dashboard Statistics
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/admin/stats", headers=headers)
+            if response.status_code == 200:
+                stats = response.json()
+                required_stats = ["total_users", "total_dealers", "pending_dealers", "approved_dealers", 
+                                "total_quotes", "pending_quotes", "approved_quotes", "total_products", "chat_messages"]
+                missing_stats = [stat for stat in required_stats if stat not in stats]
+                
+                if not missing_stats:
+                    self.log_test("Admin Dashboard Stats", True, 
+                                f"Stats retrieved - Users: {stats['total_users']}, Dealers: {stats['total_dealers']}, Quotes: {stats['total_quotes']}")
+                    tests_passed += 1
+                else:
+                    self.log_test("Admin Dashboard Stats", False, f"Missing stats: {missing_stats}")
+            else:
+                self.log_test("Admin Dashboard Stats", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Admin Dashboard Stats", False, f"Error: {str(e)}")
+        
+        # Test 2: Get All Dealers
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/admin/dealers", headers=headers)
+            if response.status_code == 200:
+                dealers = response.json()
+                if isinstance(dealers, list):
+                    if len(dealers) > 0:
+                        # Check dealer structure
+                        sample_dealer = dealers[0]
+                        required_fields = ["id", "email", "company_name", "contact_name", "is_approved", "is_active"]
+                        missing_fields = [field for field in required_fields if field not in sample_dealer]
+                        
+                        if not missing_fields:
+                            approved_count = sum(1 for d in dealers if d.get("is_approved", False))
+                            self.log_test("Get All Dealers", True, f"Retrieved {len(dealers)} dealers ({approved_count} approved)")
+                            tests_passed += 1
+                        else:
+                            self.log_test("Get All Dealers", False, f"Missing required fields: {missing_fields}")
+                    else:
+                        self.log_test("Get All Dealers", True, "No dealers found (empty list is valid)")
+                        tests_passed += 1
+                else:
+                    self.log_test("Get All Dealers", False, "Expected dealers list")
+            else:
+                self.log_test("Get All Dealers", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Get All Dealers", False, f"Error: {str(e)}")
+        
+        # Test 3: Get Pending Dealers
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/admin/dealers/pending", headers=headers)
+            if response.status_code == 200:
+                pending_dealers = response.json()
+                if isinstance(pending_dealers, list):
+                    # Check that all dealers are pending approval
+                    all_pending = all(not dealer.get("is_approved", True) for dealer in pending_dealers)
+                    if all_pending:
+                        self.log_test("Get Pending Dealers", True, f"Retrieved {len(pending_dealers)} pending dealers")
+                        tests_passed += 1
+                    else:
+                        approved_count = sum(1 for d in pending_dealers if d.get("is_approved", False))
+                        self.log_test("Get Pending Dealers", False, f"Found {approved_count} approved dealers in pending list")
+                else:
+                    self.log_test("Get Pending Dealers", False, "Expected pending dealers list")
+            else:
+                self.log_test("Get Pending Dealers", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Get Pending Dealers", False, f"Error: {str(e)}")
+        
+        # Test 4: Get All Users
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/admin/users", headers=headers)
+            if response.status_code == 200:
+                users = response.json()
+                if isinstance(users, list):
+                    if len(users) > 0:
+                        # Check user structure
+                        sample_user = users[0]
+                        required_fields = ["id", "email", "first_name", "last_name"]
+                        missing_fields = [field for field in required_fields if field not in sample_user]
+                        
+                        if not missing_fields:
+                            self.log_test("Get All Users", True, f"Retrieved {len(users)} users")
+                            tests_passed += 1
+                        else:
+                            self.log_test("Get All Users", False, f"Missing required fields: {missing_fields}")
+                    else:
+                        self.log_test("Get All Users", True, "No users found (empty list is valid)")
+                        tests_passed += 1
+                else:
+                    self.log_test("Get All Users", False, "Expected users list")
+            else:
+                self.log_test("Get All Users", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Get All Users", False, f"Error: {str(e)}")
+        
+        # Test 5: Get All Quotes (Admin)
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/admin/quotes", headers=headers)
+            if response.status_code == 200:
+                quotes = response.json()
+                if isinstance(quotes, list):
+                    if len(quotes) > 0:
+                        # Check quote structure
+                        sample_quote = quotes[0]
+                        required_fields = ["id", "user_name", "user_email", "items", "total_amount", "status"]
+                        missing_fields = [field for field in required_fields if field not in sample_quote]
+                        
+                        if not missing_fields:
+                            pending_count = sum(1 for q in quotes if q.get("status") == "pending")
+                            self.log_test("Get All Quotes (Admin)", True, f"Retrieved {len(quotes)} quotes ({pending_count} pending)")
+                            tests_passed += 1
+                        else:
+                            self.log_test("Get All Quotes (Admin)", False, f"Missing required fields: {missing_fields}")
+                    else:
+                        self.log_test("Get All Quotes (Admin)", True, "No quotes found (empty list is valid)")
+                        tests_passed += 1
+                else:
+                    self.log_test("Get All Quotes (Admin)", False, "Expected quotes list")
+            else:
+                self.log_test("Get All Quotes (Admin)", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Get All Quotes (Admin)", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
+    def test_admin_dealer_management(self):
+        """Test admin dealer approval/rejection functionality"""
+        tests_passed = 0
+        total_tests = 0
+        
+        if not hasattr(self, 'admin_token') or not self.admin_token:
+            self.log_test("Dealer Management Setup", False, "No admin token available for dealer management testing")
+            return False
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # First, create a test dealer for approval testing
+        test_dealer_id = None
+        timestamp = str(int(time.time()))
+        
+        # Create test dealer
+        try:
+            dealer_data = {
+                "email": f"testdealer{timestamp}@approvaltest.com",
+                "password": "TestPass123!",
+                "company_name": "Test Approval Company LLC",
+                "contact_name": "Test Contact Person",
+                "phone": "555-999-8888",
+                "address": "999 Test Approval Street, Test City, TX 75999",
+                "license_number": f"TEST{timestamp}"
+            }
+            
+            response = self.session.post(f"{self.base_url}/dealers/register", json=dealer_data)
+            if response.status_code == 200:
+                # Get the dealer ID from pending dealers list
+                pending_response = self.session.get(f"{self.base_url}/admin/dealers/pending", headers=headers)
+                if pending_response.status_code == 200:
+                    pending_dealers = pending_response.json()
+                    for dealer in pending_dealers:
+                        if dealer.get("email") == dealer_data["email"]:
+                            test_dealer_id = dealer["id"]
+                            break
+        except:
+            pass
+        
+        # Test 1: Approve Dealer
+        total_tests += 1
+        try:
+            if test_dealer_id:
+                response = self.session.put(f"{self.base_url}/admin/dealers/{test_dealer_id}/approve", headers=headers)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "approved successfully" in data.get("message", "").lower():
+                        self.log_test("Approve Dealer", True, f"Dealer {test_dealer_id} approved successfully")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Approve Dealer", False, "Unexpected response format", data)
+                else:
+                    self.log_test("Approve Dealer", False, f"HTTP {response.status_code}", response.text)
+            else:
+                self.log_test("Approve Dealer", False, "No test dealer ID available for approval testing")
+        except Exception as e:
+            self.log_test("Approve Dealer", False, f"Error: {str(e)}")
+        
+        # Test 2: Create another dealer for rejection testing
+        total_tests += 1
+        test_dealer_id_2 = None
+        try:
+            dealer_data_2 = {
+                "email": f"rejectdealer{timestamp}@rejectiontest.com",
+                "password": "TestPass123!",
+                "company_name": "Test Rejection Company LLC",
+                "contact_name": "Test Reject Person",
+                "phone": "555-888-7777",
+                "address": "888 Test Rejection Street, Test City, TX 75888",
+                "license_number": f"REJECT{timestamp}"
+            }
+            
+            response = self.session.post(f"{self.base_url}/dealers/register", json=dealer_data_2)
+            if response.status_code == 200:
+                # Get the dealer ID from pending dealers list
+                pending_response = self.session.get(f"{self.base_url}/admin/dealers/pending", headers=headers)
+                if pending_response.status_code == 200:
+                    pending_dealers = pending_response.json()
+                    for dealer in pending_dealers:
+                        if dealer.get("email") == dealer_data_2["email"]:
+                            test_dealer_id_2 = dealer["id"]
+                            break
+                
+                if test_dealer_id_2:
+                    self.log_test("Create Test Dealer for Rejection", True, f"Test dealer created: {test_dealer_id_2}")
+                    tests_passed += 1
+                else:
+                    self.log_test("Create Test Dealer for Rejection", False, "Could not find created dealer in pending list")
+            else:
+                self.log_test("Create Test Dealer for Rejection", False, f"HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Create Test Dealer for Rejection", False, f"Error: {str(e)}")
+        
+        # Test 3: Reject Dealer
+        total_tests += 1
+        try:
+            if test_dealer_id_2:
+                response = self.session.put(f"{self.base_url}/admin/dealers/{test_dealer_id_2}/reject", headers=headers)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "rejected successfully" in data.get("message", "").lower():
+                        self.log_test("Reject Dealer", True, f"Dealer {test_dealer_id_2} rejected successfully")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Reject Dealer", False, "Unexpected response format", data)
+                else:
+                    self.log_test("Reject Dealer", False, f"HTTP {response.status_code}", response.text)
+            else:
+                self.log_test("Reject Dealer", False, "No test dealer ID available for rejection testing")
+        except Exception as e:
+            self.log_test("Reject Dealer", False, f"Error: {str(e)}")
+        
+        # Test 4: Test with invalid dealer ID
+        total_tests += 1
+        try:
+            fake_dealer_id = "fake-dealer-id-12345"
+            response = self.session.put(f"{self.base_url}/admin/dealers/{fake_dealer_id}/approve", headers=headers)
+            if response.status_code == 404:
+                self.log_test("Invalid Dealer ID", True, "Correctly returned 404 for invalid dealer ID")
+                tests_passed += 1
+            else:
+                self.log_test("Invalid Dealer ID", False, f"Expected 404, got HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Invalid Dealer ID", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
+    def test_admin_quote_management(self):
+        """Test admin quote status management"""
+        tests_passed = 0
+        total_tests = 0
+        
+        if not hasattr(self, 'admin_token') or not self.admin_token:
+            self.log_test("Quote Management Setup", False, "No admin token available for quote management testing")
+            return False
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Get a quote ID for testing (from existing quotes)
+        quote_id = None
+        try:
+            response = self.session.get(f"{self.base_url}/admin/quotes", headers=headers)
+            if response.status_code == 200:
+                quotes = response.json()
+                if isinstance(quotes, list) and len(quotes) > 0:
+                    quote_id = quotes[0]["id"]
+        except:
+            pass
+        
+        # Test 1: Update Quote Status to Approved
+        total_tests += 1
+        try:
+            if quote_id:
+                update_data = {
+                    "status": "approved",
+                    "admin_notes": "Quote approved for processing. Excellent tactical gear selection."
+                }
+                
+                response = self.session.put(f"{self.base_url}/admin/quotes/{quote_id}/status", 
+                                          params=update_data, headers=headers)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "updated successfully" in data.get("message", "").lower():
+                        self.log_test("Update Quote Status (Approved)", True, f"Quote {quote_id} approved successfully")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Update Quote Status (Approved)", False, "Unexpected response format", data)
+                else:
+                    self.log_test("Update Quote Status (Approved)", False, f"HTTP {response.status_code}", response.text)
+            else:
+                self.log_test("Update Quote Status (Approved)", False, "No quote ID available for status testing")
+        except Exception as e:
+            self.log_test("Update Quote Status (Approved)", False, f"Error: {str(e)}")
+        
+        # Test 2: Update Quote Status to Declined
+        total_tests += 1
+        try:
+            if quote_id:
+                update_data = {
+                    "status": "declined",
+                    "admin_notes": "Quote declined due to budget constraints. Please contact sales for alternatives."
+                }
+                
+                response = self.session.put(f"{self.base_url}/admin/quotes/{quote_id}/status", 
+                                          params=update_data, headers=headers)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "updated successfully" in data.get("message", "").lower():
+                        self.log_test("Update Quote Status (Declined)", True, f"Quote {quote_id} declined successfully")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Update Quote Status (Declined)", False, "Unexpected response format", data)
+                else:
+                    self.log_test("Update Quote Status (Declined)", False, f"HTTP {response.status_code}", response.text)
+            else:
+                self.log_test("Update Quote Status (Declined)", False, "No quote ID available for status testing")
+        except Exception as e:
+            self.log_test("Update Quote Status (Declined)", False, f"Error: {str(e)}")
+        
+        # Test 3: Test with invalid quote ID
+        total_tests += 1
+        try:
+            fake_quote_id = "fake-quote-id-12345"
+            update_data = {
+                "status": "approved",
+                "admin_notes": "Test with fake ID"
+            }
+            
+            response = self.session.put(f"{self.base_url}/admin/quotes/{fake_quote_id}/status", 
+                                      params=update_data, headers=headers)
+            if response.status_code == 404:
+                self.log_test("Invalid Quote ID", True, "Correctly returned 404 for invalid quote ID")
+                tests_passed += 1
+            else:
+                self.log_test("Invalid Quote ID", False, f"Expected 404, got HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Invalid Quote ID", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
+    def test_admin_authorization(self):
+        """Test admin-only endpoint authorization"""
+        tests_passed = 0
+        total_tests = 0
+        
+        # Test 1: Admin endpoints without token
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/admin/stats")
+            if response.status_code == 401 or response.status_code == 403:
+                self.log_test("Admin Endpoint (No Token)", True, "Correctly blocked admin endpoint without token")
+                tests_passed += 1
+            else:
+                self.log_test("Admin Endpoint (No Token)", False, f"Expected 401/403, got HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Admin Endpoint (No Token)", False, f"Error: {str(e)}")
+        
+        # Test 2: Admin endpoints with user token (should fail)
+        total_tests += 1
+        try:
+            if hasattr(self, 'user_token') and self.user_token:
+                headers = {"Authorization": f"Bearer {self.user_token}"}
+                response = self.session.get(f"{self.base_url}/admin/stats", headers=headers)
+                if response.status_code == 401 or response.status_code == 403:
+                    self.log_test("Admin Endpoint (User Token)", True, "Correctly blocked admin endpoint with user token")
+                    tests_passed += 1
+                else:
+                    self.log_test("Admin Endpoint (User Token)", False, f"Expected 401/403, got HTTP {response.status_code}")
+            else:
+                self.log_test("Admin Endpoint (User Token)", True, "No user token available (test skipped)")
+                tests_passed += 1
+        except Exception as e:
+            self.log_test("Admin Endpoint (User Token)", False, f"Error: {str(e)}")
+        
+        # Test 3: Admin endpoints with dealer token (should fail)
+        total_tests += 1
+        try:
+            if hasattr(self, 'dealer_token') and self.dealer_token:
+                headers = {"Authorization": f"Bearer {self.dealer_token}"}
+                response = self.session.get(f"{self.base_url}/admin/stats", headers=headers)
+                if response.status_code == 401 or response.status_code == 403:
+                    self.log_test("Admin Endpoint (Dealer Token)", True, "Correctly blocked admin endpoint with dealer token")
+                    tests_passed += 1
+                else:
+                    self.log_test("Admin Endpoint (Dealer Token)", False, f"Expected 401/403, got HTTP {response.status_code}")
+            else:
+                self.log_test("Admin Endpoint (Dealer Token)", True, "No dealer token available (test skipped)")
+                tests_passed += 1
+        except Exception as e:
+            self.log_test("Admin Endpoint (Dealer Token)", False, f"Error: {str(e)}")
+        
+        # Test 4: Admin endpoints with valid admin token (should work)
+        total_tests += 1
+        try:
+            if hasattr(self, 'admin_token') and self.admin_token:
+                headers = {"Authorization": f"Bearer {self.admin_token}"}
+                response = self.session.get(f"{self.base_url}/admin/stats", headers=headers)
+                if response.status_code == 200:
+                    self.log_test("Admin Endpoint (Admin Token)", True, "Admin endpoint accessible with valid admin token")
+                    tests_passed += 1
+                else:
+                    self.log_test("Admin Endpoint (Admin Token)", False, f"Expected 200, got HTTP {response.status_code}")
+            else:
+                self.log_test("Admin Endpoint (Admin Token)", False, "No admin token available")
+        except Exception as e:
+            self.log_test("Admin Endpoint (Admin Token)", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
     def test_enhanced_product_apis(self):
         """Test that enhanced product APIs still work correctly"""
         tests_passed = 0
