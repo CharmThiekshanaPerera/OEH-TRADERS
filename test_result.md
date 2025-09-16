@@ -201,9 +201,11 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "1.0"
-  test_sequence: 3
+  version: "2.0"
+  test_sequence: 4
   run_ui: false
+  last_backend_test: "comprehensive_b2b_testing"
+  backend_test_suites_passed: "16/16"
 
 test_plan:
   current_focus:
