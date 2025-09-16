@@ -3011,7 +3011,7 @@ const About = () => (
             </p>
             <p className="text-lg">
               From body armor and tactical apparel to advanced optics and training equipment, we provide comprehensive 
-              solutions for all your tactical needs. Trust TacticalGear for mission-critical equipment that performs 
+              solutions for all your tactical needs. Trust OEH TRADERS for mission-critical equipment that performs 
               when it matters most.
             </p>
           </div>
