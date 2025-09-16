@@ -1947,6 +1947,199 @@ class TacticalGearAPITester:
         
         return tests_passed == total_tests
     
+    def test_admin_chat_system(self):
+        """Test comprehensive Admin Chat System functionality"""
+        tests_passed = 0
+        total_tests = 0
+        
+        # First ensure we have admin authentication
+        if not self.admin_token:
+            self.log_test("Admin Chat Setup", False, "No admin token available for admin chat testing")
+            return False
+        
+        admin_headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Test 1: Admin Chat Authentication - Verify admin token works with chat endpoints
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/admin/chat/conversations", headers=admin_headers)
+            if response.status_code == 200:
+                self.log_test("Admin Chat Authentication", True, "Admin token successfully authenticated for chat endpoints")
+                tests_passed += 1
+            elif response.status_code == 401:
+                self.log_test("Admin Chat Authentication", False, "Admin token rejected - authentication failed")
+            else:
+                self.log_test("Admin Chat Authentication", False, f"Unexpected response: HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Admin Chat Authentication", False, f"Error: {str(e)}")
+        
+        # Test 2: Get All Conversations - Admin can view all user conversations
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/admin/chat/conversations", headers=admin_headers)
+            if response.status_code == 200:
+                conversations = response.json()
+                if isinstance(conversations, list):
+                    if len(conversations) > 0:
+                        # Check conversation structure
+                        sample_conv = conversations[0]
+                        required_fields = ["user_id", "user_name", "user_email", "last_message", "last_message_time", "message_count"]
+                        missing_fields = [field for field in required_fields if field not in sample_conv]
+                        
+                        if not missing_fields:
+                            # Check for user data enrichment
+                            has_user_data = all(conv.get("user_name") and conv.get("user_email") for conv in conversations)
+                            if has_user_data:
+                                self.log_test("Admin Get All Conversations", True, f"Retrieved {len(conversations)} conversations with proper user data enrichment")
+                                tests_passed += 1
+                            else:
+                                self.log_test("Admin Get All Conversations", False, "Conversations missing user data enrichment")
+                        else:
+                            self.log_test("Admin Get All Conversations", False, f"Missing required fields: {missing_fields}")
+                    else:
+                        self.log_test("Admin Get All Conversations", True, "No conversations found (expected if no sample chat data)")
+                        tests_passed += 1
+                else:
+                    self.log_test("Admin Get All Conversations", False, f"Expected list, got {type(conversations)}")
+            else:
+                self.log_test("Admin Get All Conversations", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Admin Get All Conversations", False, f"Error: {str(e)}")
+        
+        # Test 3: Get Specific User Messages - Admin can access any user's conversation
+        total_tests += 1
+        try:
+            # First get a user ID from conversations or use sample user
+            user_id_to_test = None
+            
+            # Try to get from conversations first
+            conv_response = self.session.get(f"{self.base_url}/admin/chat/conversations", headers=admin_headers)
+            if conv_response.status_code == 200:
+                conversations = conv_response.json()
+                if conversations and len(conversations) > 0:
+                    user_id_to_test = conversations[0]["user_id"]
+            
+            # If no conversations, try with sample user ID or test user ID
+            if not user_id_to_test and self.test_user_id:
+                user_id_to_test = self.test_user_id
+            
+            if user_id_to_test:
+                response = self.session.get(f"{self.base_url}/admin/chat/{user_id_to_test}/messages", headers=admin_headers)
+                if response.status_code == 200:
+                    messages = response.json()
+                    if isinstance(messages, list):
+                        if len(messages) > 0:
+                            # Check message structure
+                            sample_msg = messages[0]
+                            required_fields = ["id", "user_id", "sender_type", "sender_name", "message", "created_at"]
+                            missing_fields = [field for field in required_fields if field not in sample_msg]
+                            
+                            if not missing_fields:
+                                # Check for both user and admin messages
+                                sender_types = set(msg["sender_type"] for msg in messages)
+                                self.log_test("Admin Get User Messages", True, f"Retrieved {len(messages)} messages with sender types: {list(sender_types)}")
+                                tests_passed += 1
+                            else:
+                                self.log_test("Admin Get User Messages", False, f"Missing required fields: {missing_fields}")
+                        else:
+                            self.log_test("Admin Get User Messages", True, "No messages found for user (expected if no chat history)")
+                            tests_passed += 1
+                    else:
+                        self.log_test("Admin Get User Messages", False, f"Expected list, got {type(messages)}")
+                else:
+                    self.log_test("Admin Get User Messages", False, f"HTTP {response.status_code}", response.text)
+            else:
+                self.log_test("Admin Get User Messages", False, "No user ID available for testing")
+        except Exception as e:
+            self.log_test("Admin Get User Messages", False, f"Error: {str(e)}")
+        
+        # Test 4: Admin Send Reply - Admin can send messages with proper authentication
+        total_tests += 1
+        try:
+            # Use test user ID or first conversation user ID
+            target_user_id = self.test_user_id
+            if not target_user_id:
+                # Try to get from conversations
+                conv_response = self.session.get(f"{self.base_url}/admin/chat/conversations", headers=admin_headers)
+                if conv_response.status_code == 200:
+                    conversations = conv_response.json()
+                    if conversations and len(conversations) > 0:
+                        target_user_id = conversations[0]["user_id"]
+            
+            if target_user_id:
+                admin_message_data = {
+                    "user_id": target_user_id,
+                    "sender_type": "admin",
+                    "sender_name": "Admin Support",
+                    "message": "Hello! This is an admin reply to test the admin chat system functionality."
+                }
+                
+                response = self.session.post(f"{self.base_url}/admin/chat/send", json=admin_message_data, headers=admin_headers)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "message" in data and "sent successfully" in data["message"].lower():
+                        self.log_test("Admin Send Reply", True, "Admin message sent successfully with proper authentication")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Admin Send Reply", False, "Unexpected response format", data)
+                else:
+                    self.log_test("Admin Send Reply", False, f"HTTP {response.status_code}", response.text)
+            else:
+                self.log_test("Admin Send Reply", False, "No target user ID available for admin reply testing")
+        except Exception as e:
+            self.log_test("Admin Send Reply", False, f"Error: {str(e)}")
+        
+        # Test 5: Verify Sample Chat Data Exists
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/admin/chat/conversations", headers=admin_headers)
+            if response.status_code == 200:
+                conversations = response.json()
+                if isinstance(conversations, list) and len(conversations) > 0:
+                    # Check if we have sample chat data from create-sample-users
+                    sample_data_found = False
+                    for conv in conversations:
+                        if conv.get("user_name") and ("John" in conv["user_name"] or "Sarah" in conv["user_name"] or "Mike" in conv["user_name"]):
+                            sample_data_found = True
+                            break
+                    
+                    if sample_data_found:
+                        self.log_test("Sample Chat Data Verification", True, f"Sample chat data found in {len(conversations)} conversations")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Sample Chat Data Verification", True, f"Found {len(conversations)} conversations (may not be sample data)")
+                        tests_passed += 1
+                else:
+                    self.log_test("Sample Chat Data Verification", False, "No conversations found - sample chat data may not be created")
+            else:
+                self.log_test("Sample Chat Data Verification", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Sample Chat Data Verification", False, f"Error: {str(e)}")
+        
+        # Test 6: Admin Chat Authorization - Non-admin users cannot access admin chat endpoints
+        total_tests += 1
+        try:
+            if self.user_token:
+                user_headers = {"Authorization": f"Bearer {self.user_token}"}
+                response = self.session.get(f"{self.base_url}/admin/chat/conversations", headers=user_headers)
+                if response.status_code == 401 or response.status_code == 403:
+                    self.log_test("Admin Chat Authorization", True, "Non-admin users correctly blocked from admin chat endpoints")
+                    tests_passed += 1
+                else:
+                    self.log_test("Admin Chat Authorization", False, f"Expected 401/403, got HTTP {response.status_code}")
+            else:
+                # Test without any token
+                response = self.session.get(f"{self.base_url}/admin/chat/conversations")
+                if response.status_code == 401 or response.status_code == 403:
+                    self.log_test("Admin Chat Authorization", True, "Unauthenticated requests correctly blocked from admin chat endpoints")
+                    tests_passed += 1
+                else:
+                    self.log_test("Admin Chat Authorization", False, f"Expected 401/403, got HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Admin Chat Authorization", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
     def run_all_tests(self):
         """Run comprehensive B2B tactical gear backend tests"""
         print("🚀 Starting Comprehensive B2B Tactical Gear Backend API Tests")
