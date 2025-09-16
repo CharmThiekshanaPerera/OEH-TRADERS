@@ -853,6 +853,563 @@ class TacticalGearAPITester:
         
         return tests_passed == total_tests
     
+    def test_create_sample_users(self):
+        """Test sample users creation endpoint"""
+        try:
+            response = self.session.post(f"{self.base_url}/create-sample-users")
+            if response.status_code == 200:
+                data = response.json()
+                if ("users_created" in data and "dealers_created" in data and 
+                    data["users_created"] >= 3 and data["dealers_created"] >= 2):
+                    self.log_test("Create Sample Users", True, f"Created {data['users_created']} users and {data['dealers_created']} dealers")
+                    return True
+                else:
+                    self.log_test("Create Sample Users", False, "Unexpected response format", data)
+                    return False
+            else:
+                self.log_test("Create Sample Users", False, f"HTTP {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_test("Create Sample Users", False, f"Error: {str(e)}")
+            return False
+    
+    def test_user_authentication_system(self):
+        """Test complete user authentication system"""
+        tests_passed = 0
+        total_tests = 0
+        
+        # Generate unique email for this test run
+        timestamp = str(int(time.time()))
+        test_email = f"testuser{timestamp}@company.com"
+        test_password = "testpass123"
+        
+        # Test 1: User Registration
+        total_tests += 1
+        try:
+            user_data = {
+                "email": test_email,
+                "password": test_password,
+                "first_name": "Test",
+                "last_name": "User",
+                "company_name": "Test Company LLC",
+                "phone": "555-123-4567",
+                "address": "123 Test Street",
+                "city": "Test City",
+                "state": "CA",
+                "zip_code": "90210",
+                "country": "United States"
+            }
+            
+            response = self.session.post(f"{self.base_url}/users/register", json=user_data)
+            if response.status_code == 200:
+                data = response.json()
+                if "message" in data and "registration successful" in data["message"].lower():
+                    self.log_test("User Registration", True, "User registered successfully")
+                    tests_passed += 1
+                else:
+                    self.log_test("User Registration", False, "Unexpected response format", data)
+            else:
+                self.log_test("User Registration", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("User Registration", False, f"Error: {str(e)}")
+        
+        # Test 2: User Login
+        total_tests += 1
+        try:
+            login_data = {
+                "email": test_email,
+                "password": test_password
+            }
+            
+            response = self.session.post(f"{self.base_url}/users/login", json=login_data)
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data and "user" in data:
+                    self.user_token = data["access_token"]
+                    self.test_user_id = data["user"]["id"]
+                    self.log_test("User Login", True, f"User logged in successfully, token received")
+                    tests_passed += 1
+                else:
+                    self.log_test("User Login", False, "Missing access_token or user data", data)
+            else:
+                self.log_test("User Login", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("User Login", False, f"Error: {str(e)}")
+        
+        # Test 3: User Profile (Protected Route)
+        total_tests += 1
+        try:
+            if self.user_token:
+                headers = {"Authorization": f"Bearer {self.user_token}"}
+                response = self.session.get(f"{self.base_url}/users/profile", headers=headers)
+                if response.status_code == 200:
+                    profile = response.json()
+                    if "email" in profile and profile["email"] == test_email:
+                        self.log_test("User Profile", True, f"Profile retrieved for {profile['first_name']} {profile['last_name']}")
+                        tests_passed += 1
+                    else:
+                        self.log_test("User Profile", False, "Profile data incorrect", profile)
+                else:
+                    self.log_test("User Profile", False, f"HTTP {response.status_code}", response.text)
+            else:
+                self.log_test("User Profile", False, "No user token available")
+        except Exception as e:
+            self.log_test("User Profile", False, f"Error: {str(e)}")
+        
+        # Test 4: Test with sample user credentials
+        total_tests += 1
+        try:
+            sample_login = {
+                "email": "john.doe@company.com",
+                "password": "password123"
+            }
+            
+            response = self.session.post(f"{self.base_url}/users/login", json=sample_login)
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data and "user" in data:
+                    # Store sample user token for cart testing
+                    self.user_token = data["access_token"]
+                    self.test_user_id = data["user"]["id"]
+                    self.log_test("Sample User Login", True, f"Sample user John Doe logged in successfully")
+                    tests_passed += 1
+                else:
+                    self.log_test("Sample User Login", False, "Missing access_token or user data", data)
+            else:
+                self.log_test("Sample User Login", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Sample User Login", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
+    def test_dealer_authentication_verification(self):
+        """Test dealer authentication with sample credentials"""
+        tests_passed = 0
+        total_tests = 0
+        
+        # Test 1: Dealer Login with sample credentials
+        total_tests += 1
+        try:
+            dealer_login = {
+                "email": "dealer@tactical-wholesale.com",
+                "password": "dealer123"
+            }
+            
+            response = self.session.post(f"{self.base_url}/dealers/login", json=dealer_login)
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data and "dealer" in data:
+                    self.dealer_token = data["access_token"]
+                    self.log_test("Sample Dealer Login", True, f"Sample dealer logged in successfully")
+                    tests_passed += 1
+                else:
+                    self.log_test("Sample Dealer Login", False, "Missing access_token or dealer data", data)
+            else:
+                self.log_test("Sample Dealer Login", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Sample Dealer Login", False, f"Error: {str(e)}")
+        
+        # Test 2: Dealer Profile
+        total_tests += 1
+        try:
+            if self.dealer_token:
+                headers = {"Authorization": f"Bearer {self.dealer_token}"}
+                response = self.session.get(f"{self.base_url}/dealers/profile", headers=headers)
+                if response.status_code == 200:
+                    profile = response.json()
+                    if "email" in profile and "company_name" in profile:
+                        self.log_test("Dealer Profile", True, f"Dealer profile retrieved for {profile['company_name']}")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Dealer Profile", False, "Profile data incomplete", profile)
+                else:
+                    self.log_test("Dealer Profile", False, f"HTTP {response.status_code}", response.text)
+            else:
+                self.log_test("Dealer Profile", False, "No dealer token available")
+        except Exception as e:
+            self.log_test("Dealer Profile", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
+    def test_enhanced_cart_system(self):
+        """Test user-based cart system"""
+        tests_passed = 0
+        total_tests = 0
+        
+        if not self.user_token:
+            self.log_test("Cart System Setup", False, "No user token available for cart testing")
+            return False
+        
+        headers = {"Authorization": f"Bearer {self.user_token}"}
+        
+        # Get a product ID for testing
+        product_id = None
+        try:
+            response = self.session.get(f"{self.base_url}/products?limit=1")
+            if response.status_code == 200:
+                products = response.json()
+                if products and len(products) > 0:
+                    product_id = products[0]["id"]
+        except:
+            pass
+        
+        if not product_id:
+            self.log_test("Cart System Setup", False, "Could not get product ID for cart testing")
+            return False
+        
+        # Test 1: Add item to cart (requires user auth)
+        total_tests += 1
+        try:
+            cart_request = {
+                "product_id": product_id,
+                "quantity": 2
+            }
+            
+            response = self.session.post(f"{self.base_url}/cart/add", json=cart_request, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                if "message" in data and "added to cart" in data["message"].lower():
+                    self.log_test("Add to Cart (User Auth)", True, "Item added to user's cart successfully")
+                    tests_passed += 1
+                else:
+                    self.log_test("Add to Cart (User Auth)", False, "Unexpected response format", data)
+            else:
+                self.log_test("Add to Cart (User Auth)", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Add to Cart (User Auth)", False, f"Error: {str(e)}")
+        
+        # Test 2: Get user's cart
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/cart", headers=headers)
+            if response.status_code == 200:
+                cart = response.json()
+                if "items" in cart and len(cart["items"]) > 0:
+                    # Check if items have enriched product data
+                    first_item = cart["items"][0]
+                    if "product" in first_item and "name" in first_item["product"]:
+                        self.log_test("Get User Cart", True, f"Retrieved cart with {len(cart['items'])} items")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Get User Cart", False, "Cart items missing enriched product data")
+                else:
+                    self.log_test("Get User Cart", False, "Cart is empty or missing items")
+            else:
+                self.log_test("Get User Cart", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Get User Cart", False, f"Error: {str(e)}")
+        
+        # Test 3: Remove item from cart
+        total_tests += 1
+        try:
+            response = self.session.delete(f"{self.base_url}/cart/item/{product_id}", headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                if "removed from cart" in data.get("message", "").lower():
+                    self.log_test("Remove from Cart", True, "Item removed from cart successfully")
+                    tests_passed += 1
+                else:
+                    self.log_test("Remove from Cart", False, "Unexpected response format", data)
+            else:
+                self.log_test("Remove from Cart", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Remove from Cart", False, f"Error: {str(e)}")
+        
+        # Test 4: Test cart without authentication
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/cart")
+            if response.status_code == 401 or response.status_code == 403:
+                self.log_test("Cart Auth Required", True, "Cart correctly requires user authentication")
+                tests_passed += 1
+            else:
+                self.log_test("Cart Auth Required", False, f"Expected 401/403, got HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Cart Auth Required", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
+    def test_quote_system(self):
+        """Test quote system functionality"""
+        tests_passed = 0
+        total_tests = 0
+        
+        if not self.user_token or not self.test_user_id:
+            self.log_test("Quote System Setup", False, "No user token available for quote testing")
+            return False
+        
+        headers = {"Authorization": f"Bearer {self.user_token}"}
+        quote_id = None
+        
+        # Test 1: Create quote with business data
+        total_tests += 1
+        try:
+            quote_data = {
+                "user_id": self.test_user_id,
+                "items": [
+                    {
+                        "product_id": "sample-product-1",
+                        "quantity": 5,
+                        "price": 299.99,
+                        "notes": "Tactical Plate Carrier Vest"
+                    },
+                    {
+                        "product_id": "sample-product-2", 
+                        "quantity": 10,
+                        "price": 189.99,
+                        "notes": "Combat Tactical Boots"
+                    }
+                ],
+                "project_name": "Security Team Equipment Upgrade",
+                "intended_use": "security_services",
+                "delivery_address": "123 Business Street, Security City, CA 90210",
+                "billing_address": "123 Business Street, Security City, CA 90210",
+                "company_size": "51-200",
+                "budget_range": "$5000-$15000",
+                "additional_requirements": "Need bulk pricing and training materials"
+            }
+            
+            response = self.session.post(f"{self.base_url}/quotes", json=quote_data, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                if "quote_id" in data and "message" in data:
+                    quote_id = data["quote_id"]
+                    self.log_test("Create Quote", True, f"Quote created successfully: {quote_id}")
+                    tests_passed += 1
+                else:
+                    self.log_test("Create Quote", False, "Missing quote_id in response", data)
+            else:
+                self.log_test("Create Quote", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Create Quote", False, f"Error: {str(e)}")
+        
+        # Test 2: Get user's quote history
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/quotes", headers=headers)
+            if response.status_code == 200:
+                quotes = response.json()
+                if isinstance(quotes, list) and len(quotes) >= 1:
+                    # Check if quotes have required fields
+                    sample_quote = quotes[0]
+                    required_fields = ["id", "user_name", "user_email", "items", "total_amount", "project_name", "status"]
+                    missing_fields = [field for field in required_fields if field not in sample_quote]
+                    
+                    if not missing_fields:
+                        self.log_test("Get User Quotes", True, f"Retrieved {len(quotes)} quotes with complete data")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Get User Quotes", False, f"Missing required fields: {missing_fields}")
+                else:
+                    self.log_test("Get User Quotes", False, f"Expected quotes list, got {len(quotes) if isinstance(quotes, list) else 'invalid'}")
+            else:
+                self.log_test("Get User Quotes", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Get User Quotes", False, f"Error: {str(e)}")
+        
+        # Test 3: Admin quote management (get all quotes)
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/admin/quotes")
+            if response.status_code == 200:
+                quotes = response.json()
+                if isinstance(quotes, list) and len(quotes) >= 1:
+                    self.log_test("Admin Get All Quotes", True, f"Admin retrieved {len(quotes)} quotes")
+                    tests_passed += 1
+                else:
+                    self.log_test("Admin Get All Quotes", False, f"Expected quotes list, got {len(quotes) if isinstance(quotes, list) else 'invalid'}")
+            else:
+                self.log_test("Admin Get All Quotes", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Admin Get All Quotes", False, f"Error: {str(e)}")
+        
+        # Test 4: Update quote status (admin function)
+        total_tests += 1
+        try:
+            if quote_id:
+                update_data = {
+                    "status": "approved",
+                    "admin_notes": "Quote approved for processing. Contact procurement for delivery coordination."
+                }
+                
+                response = self.session.put(f"{self.base_url}/admin/quotes/{quote_id}/status", 
+                                          params=update_data)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "message" in data and "updated successfully" in data["message"].lower():
+                        self.log_test("Update Quote Status", True, "Quote status updated successfully")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Update Quote Status", False, "Unexpected response format", data)
+                else:
+                    self.log_test("Update Quote Status", False, f"HTTP {response.status_code}", response.text)
+            else:
+                self.log_test("Update Quote Status", False, "No quote ID available for status update")
+        except Exception as e:
+            self.log_test("Update Quote Status", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
+    def test_chat_system(self):
+        """Test chat system functionality"""
+        tests_passed = 0
+        total_tests = 0
+        
+        if not self.user_token or not self.test_user_id:
+            self.log_test("Chat System Setup", False, "No user token available for chat testing")
+            return False
+        
+        headers = {"Authorization": f"Bearer {self.user_token}"}
+        
+        # Test 1: Send user message
+        total_tests += 1
+        try:
+            message_data = {
+                "user_id": self.test_user_id,
+                "sender_type": "user",
+                "sender_name": "Test User",
+                "message": "Hello, I have a question about bulk pricing for tactical equipment."
+            }
+            
+            response = self.session.post(f"{self.base_url}/chat/send", json=message_data, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                if "message" in data and "sent successfully" in data["message"].lower():
+                    self.log_test("Send User Message", True, "User message sent successfully")
+                    tests_passed += 1
+                else:
+                    self.log_test("Send User Message", False, "Unexpected response format", data)
+            else:
+                self.log_test("Send User Message", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Send User Message", False, f"Error: {str(e)}")
+        
+        # Test 2: Get chat history
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/chat/{self.test_user_id}", headers=headers)
+            if response.status_code == 200:
+                messages = response.json()
+                if isinstance(messages, list) and len(messages) >= 1:
+                    # Check if messages have required fields
+                    sample_message = messages[0]
+                    required_fields = ["id", "user_id", "sender_type", "sender_name", "message", "created_at"]
+                    missing_fields = [field for field in required_fields if field not in sample_message]
+                    
+                    if not missing_fields:
+                        self.log_test("Get Chat History", True, f"Retrieved {len(messages)} chat messages")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Get Chat History", False, f"Missing required fields: {missing_fields}")
+                else:
+                    self.log_test("Get Chat History", False, f"Expected messages list, got {len(messages) if isinstance(messages, list) else 'invalid'}")
+            else:
+                self.log_test("Get Chat History", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Get Chat History", False, f"Error: {str(e)}")
+        
+        # Test 3: Admin send message
+        total_tests += 1
+        try:
+            admin_message_data = {
+                "user_id": self.test_user_id,
+                "sender_type": "admin",
+                "sender_name": "Support Team",
+                "message": "Thank you for your inquiry! I'd be happy to help with bulk pricing information."
+            }
+            
+            response = self.session.post(f"{self.base_url}/admin/chat/send", json=admin_message_data)
+            if response.status_code == 200:
+                data = response.json()
+                if "message" in data and "sent successfully" in data["message"].lower():
+                    self.log_test("Admin Send Message", True, "Admin message sent successfully")
+                    tests_passed += 1
+                else:
+                    self.log_test("Admin Send Message", False, "Unexpected response format", data)
+            else:
+                self.log_test("Admin Send Message", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Admin Send Message", False, f"Error: {str(e)}")
+        
+        # Test 4: Verify chat access control (user can only access own chat)
+        total_tests += 1
+        try:
+            # Try to access another user's chat
+            fake_user_id = "fake-user-id-12345"
+            response = self.session.get(f"{self.base_url}/chat/{fake_user_id}", headers=headers)
+            if response.status_code == 403:
+                self.log_test("Chat Access Control", True, "Correctly blocked access to other user's chat")
+                tests_passed += 1
+            else:
+                self.log_test("Chat Access Control", False, f"Expected 403, got HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Chat Access Control", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
+    def test_enhanced_product_apis(self):
+        """Test that enhanced product APIs still work correctly"""
+        tests_passed = 0
+        total_tests = 0
+        
+        # Test 1: New arrivals endpoint
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/products/new-arrivals")
+            if response.status_code == 200:
+                products = response.json()
+                if isinstance(products, list) and len(products) >= 1:
+                    self.log_test("New Arrivals API", True, f"Retrieved {len(products)} new arrival products")
+                    tests_passed += 1
+                else:
+                    self.log_test("New Arrivals API", False, f"Expected products list, got {len(products) if isinstance(products, list) else 'invalid'}")
+            else:
+                self.log_test("New Arrivals API", False, f"HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("New Arrivals API", False, f"Error: {str(e)}")
+        
+        # Test 2: Categories with counts (enhanced)
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/categories/with-counts")
+            if response.status_code == 200:
+                categories = response.json()
+                if isinstance(categories, list) and len(categories) >= 6:
+                    sample_category = categories[0]
+                    if "product_count" in sample_category:
+                        self.log_test("Enhanced Categories API", True, f"Retrieved {len(categories)} categories with counts")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Enhanced Categories API", False, "Categories missing product_count field")
+                else:
+                    self.log_test("Enhanced Categories API", False, f"Expected 6+ categories, got {len(categories) if isinstance(categories, list) else 'invalid'}")
+            else:
+                self.log_test("Enhanced Categories API", False, f"HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Enhanced Categories API", False, f"Error: {str(e)}")
+        
+        # Test 3: Brands with counts (enhanced)
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/brands/with-counts")
+            if response.status_code == 200:
+                brands = response.json()
+                if isinstance(brands, list) and len(brands) >= 6:
+                    sample_brand = brands[0]
+                    if "product_count" in sample_brand:
+                        self.log_test("Enhanced Brands API", True, f"Retrieved {len(brands)} brands with counts")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Enhanced Brands API", False, "Brands missing product_count field")
+                else:
+                    self.log_test("Enhanced Brands API", False, f"Expected 6+ brands, got {len(brands) if isinstance(brands, list) else 'invalid'}")
+            else:
+                self.log_test("Enhanced Brands API", False, f"HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("Enhanced Brands API", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
     def run_all_tests(self):
         """Run all API tests including new features"""
         print("🚀 Starting Enhanced Tactical Gear E-commerce Backend API Tests")
