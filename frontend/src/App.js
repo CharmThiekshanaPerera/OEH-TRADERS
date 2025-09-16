@@ -1004,7 +1004,7 @@ const Footer = () => (
         </div>
       </div>
       <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-        <p>&copy; 2025 TacticalGear. All rights reserved. Professional tactical equipment supplier.</p>
+        <p>&copy; 2025 OEH TRADERS. All rights reserved. Professional tactical equipment supplier.</p>
       </div>
     </div>
   </footer>
