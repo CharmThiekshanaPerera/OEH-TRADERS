@@ -669,11 +669,16 @@ const NewArrivals = ({ products }) => {
   };
   
   const handleAddToCart = async (productId) => {
-    const success = await addToCart(productId);
-    if (success) {
+    if (!user) {
+      navigate('/user-login');
+      return;
+    }
+
+    const result = await addToCart(productId);
+    if (result.success) {
       alert('Product added to cart!');
     } else {
-      alert('Error adding product to cart');
+      alert(result.error || 'Error adding product to cart');
     }
   };
   
