@@ -3155,6 +3155,8 @@ function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/user-login" element={<UserLogin />} />
             <Route path="/dealer-login" element={<DealerLogin />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/cart" element={<ShoppingCart />} />
             <Route path="/quote-checkout" element={<QuoteCheckout />} />
             <Route path="/profile" element={<UserProfile />} />
