@@ -627,7 +627,7 @@ const TrendingGear = ({ products }) => {
                     disabled={!product.in_stock}
                     className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
-                    {!user ? 'Login to Add' : product.in_stock ? 'Add to Cart' : 'Out of Stock'}
+                    {!user ? 'Request Quote' : product.in_stock ? 'Request Quote' : 'Out of Stock'}
                   </button>
                 </div>
               </div>
