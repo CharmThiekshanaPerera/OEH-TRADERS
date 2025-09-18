@@ -242,6 +242,7 @@ test_plan:
   admin_features_testing: true
   admin_backend_complete: true
   admin_chat_system_tested: true
+  enhanced_quote_system_tested: true
 
   - task: "Dealer Authentication System"
     implemented: true
