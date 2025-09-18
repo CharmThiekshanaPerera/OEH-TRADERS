@@ -615,7 +615,7 @@ const TrendingGear = ({ products }) => {
                 <h3 className="text-xl font-semibold mb-2">{product.name}</h3>
                 <p className="text-gray-600 mb-4">{product.description.substring(0, 100)}...</p>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-2xl font-bold text-red-600">${product.price}</span>
+                  <span className="text-lg font-semibold text-gray-600">Contact for Price</span>
                   <div className="flex items-center">
                     <span className="text-yellow-400">★</span>
                     <span className="ml-1 text-gray-600">{product.rating}</span>
