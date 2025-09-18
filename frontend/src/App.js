@@ -1477,15 +1477,34 @@ const UserLogin = () => {
       if (isLogin) {
         const result = await loginUser(formData.email, formData.password);
         if (result.success) {
-          navigate('/');
+          // Check if user should be redirected to a specific product for quote
+          const returnToProduct = localStorage.getItem('returnToProduct');
+          if (returnToProduct) {
+            localStorage.removeItem('returnToProduct');
+            navigate('/quote-checkout', { state: { productId: returnToProduct } });
+          } else {
+            navigate('/');
+          }
         } else {
           setMessage(result.error);
         }
       } else {
         const result = await registerUser(formData);
         if (result.success) {
-          setMessage('Registration successful! Please login.');
-          setIsLogin(true);
+          // Auto-login after successful registration
+          const loginResult = await loginUser(formData.email, formData.password);
+          if (loginResult.success) {
+            const returnToProduct = localStorage.getItem('returnToProduct');
+            if (returnToProduct) {
+              localStorage.removeItem('returnToProduct');
+              navigate('/quote-checkout', { state: { productId: returnToProduct } });
+            } else {
+              navigate('/');
+            }
+          } else {
+            setMessage('Registration successful! Please login.');
+            setIsLogin(true);
+          }
         } else {
           setMessage(result.error);
         }
