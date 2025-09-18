@@ -880,7 +880,7 @@ const NewArrivals = ({ products }) => {
                           disabled={!product.in_stock}
                           className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
-                          {product.in_stock ? 'Add to Cart' : 'Out of Stock'}
+                          {product.in_stock ? 'Request Quote' : 'Out of Stock'}
                         </button>
                         <button className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
