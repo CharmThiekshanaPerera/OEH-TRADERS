@@ -1423,6 +1423,13 @@ const Products = () => {
           </div>
         </div>
       </div>
+      
+      <LoginRequiredPopup
+        isOpen={showLoginPopup}
+        onClose={() => setShowLoginPopup(false)}
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+      />
     </div>
   );
 };
