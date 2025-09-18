@@ -424,6 +424,21 @@ test_plan:
           agent: "testing"
           comment: "✅ TESTED: Sample data creation system working perfectly. Created 3 sample users with realistic business data, 2 approved dealers, sample quotes with business information, and chat message history. All sample credentials working correctly for testing purposes."
 
+  - task: "Enhanced Quote Pricing System with Email and Admin Management"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Testing enhanced quote-based pricing system with comprehensive admin email and pricing management endpoints as requested in review."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: Enhanced Quote-Based Pricing System fully functional. All 6 test suites passed (6/6). Comprehensive Quote Creation - quotes created successfully with comprehensive business data for pricing testing. Admin Quote Pricing Update - /api/admin/quotes/{quote_id}/pricing endpoint working correctly, admin can update pricing ($8750.00) with bulk discount and auto-approve quotes. Quote Auto-Approval After Pricing - quotes automatically approved when pricing is updated by admin. Admin Quote Email Sending - /api/admin/quotes/{quote_id}/send-email endpoint working correctly, admin can send quote details via email to users. Email Tracking Verification - email sent tracking functionality working (email_sent, email_sent_at, email_sent_by fields updated). Admin Quote Context Integration - /api/admin/chat/{user_id}/quote-context endpoint working perfectly, admin can retrieve complete user quote context with 5 recent quotes for chat discussions. Complete B2B quote-based pricing workflow tested: user creates comprehensive quote → admin updates pricing → quote auto-approved → admin sends email → admin has full quote context for chat support. All enhanced quote pricing endpoints operational and ready for frontend integration."
+
 frontend:
   - task: "Dealer Login and Registration Frontend"
     implemented: true
