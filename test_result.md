@@ -227,8 +227,8 @@ metadata:
   version: "2.2"
   test_sequence: 7
   run_ui: false
-  last_backend_test: "enhanced_quote_system_testing"
-  backend_test_suites_passed: "23/23"
+  last_backend_test: "enhanced_quote_pricing_system_testing"
+  backend_test_suites_passed: "24/24"
 
 test_plan:
   current_focus:
