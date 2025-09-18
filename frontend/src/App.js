@@ -855,12 +855,7 @@ const NewArrivals = ({ products }) => {
                         </div>
                         <div className="text-right">
                           <div className="flex items-center space-x-2">
-                            <span className="text-2xl font-bold text-red-600">${product.price}</span>
-                            {product.original_price && (
-                              <span className="text-sm line-through text-gray-400">
-                                ${product.original_price}
-                              </span>
-                            )}
+                            <span className="text-lg font-semibold text-gray-600">Contact for Price</span>
                           </div>
                         </div>
                       </div>
