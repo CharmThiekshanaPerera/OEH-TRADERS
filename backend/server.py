@@ -1328,6 +1328,53 @@ async def update_quote_pricing(quote_id: str, pricing_data: dict, current_admin:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update quote pricing: {str(e)}")
 
+@api_router.get("/admin/chat/{user_id}/messages")
+async def get_user_chat_messages(user_id: str, current_admin: Admin = Depends(get_current_admin)):
+    """Get all messages for a specific user conversation"""
+    messages = await db.chat_messages.find({"user_id": user_id}).sort("created_at", 1).to_list(length=None)
+    return [ChatMessage(**{k: v for k, v in msg.items() if k != "_id"}) for msg in messages]
+
+@api_router.get("/admin/chat/{user_id}/quote-context")
+async def get_user_quote_context(user_id: str, current_admin: Admin = Depends(get_current_admin)):
+    """Get user's quote information for chat context"""
+    try:
+        # Get user details
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Get user's quotes
+        quotes = await db.quotes.find({"user_id": user_id}).sort("created_at", -1).to_list(length=5)
+        
+        # Format quote context
+        quote_context = []
+        for quote in quotes:
+            quote_info = {
+                "quote_id": quote["id"],
+                "project_name": quote.get("project_name", ""),
+                "status": quote.get("status", "pending"),
+                "total_amount": quote.get("total_amount", 0),
+                "created_at": quote.get("created_at", ""),
+                "items": quote.get("items", []),
+                "company_name": quote.get("company_name", ""),
+                "intended_use": quote.get("intended_use", "")
+            }
+            quote_context.append(quote_info)
+        
+        return {
+            "user": {
+                "id": user["id"],
+                "name": f"{user.get('first_name', '')} {user.get('last_name', '')}".strip(),
+                "email": user.get("email", ""),
+                "company_name": user.get("company_name", ""),
+                "phone": user.get("phone", "")
+            },
+            "quotes": quote_context
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get quote context: {str(e)}")
+
 # Enhanced Product endpoints with stock filtering (existing)
 @api_router.get("/products", response_model=List[Product])
 async def get_products(
