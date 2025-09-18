@@ -1963,6 +1963,230 @@ class TacticalGearAPITester:
         
         return tests_passed == total_tests
     
+    def test_enhanced_quote_system(self):
+        """Test enhanced quote system with comprehensive data model"""
+        tests_passed = 0
+        total_tests = 0
+        
+        if not self.user_token or not self.test_user_id:
+            self.log_test("Enhanced Quote System Setup", False, "No user token available for enhanced quote testing")
+            return False
+        
+        headers = {"Authorization": f"Bearer {self.user_token}"}
+        quote_id = None
+        
+        # Test 1: Create quote with enhanced comprehensive data model
+        total_tests += 1
+        try:
+            # Enhanced quote data with comprehensive user details
+            enhanced_quote_data = {
+                "user_id": self.test_user_id,
+                "items": [
+                    {
+                        "product_id": "sample-product-1",
+                        "quantity": 5,
+                        "price": 0,  # Initially set to 0 as per requirement
+                        "notes": "Tactical Plate Carrier Vest - Level IIIA Protection"
+                    },
+                    {
+                        "product_id": "sample-product-2", 
+                        "quantity": 10,
+                        "price": 0,  # Initially set to 0 as per requirement
+                        "notes": "Combat Tactical Boots - Size 10"
+                    }
+                ],
+                # Quote Information
+                "project_name": "Security Team Equipment Upgrade Q2 2025",
+                "intended_use": "security_services",
+                "delivery_date": "2025-03-15T10:00:00Z",
+                "delivery_address": "456 Security Blvd, Protection City, TX 75001",
+                "billing_address": "456 Security Blvd, Protection City, TX 75001",
+                # Company Information  
+                "company_size": "51-200",
+                "budget_range": "$10000-$25000",
+                "additional_requirements": "Need bulk pricing, training materials, and expedited delivery for security team expansion"
+            }
+            
+            response = self.session.post(f"{self.base_url}/quotes", json=enhanced_quote_data, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                if "quote_id" in data and "message" in data:
+                    quote_id = data["quote_id"]
+                    self.log_test("Enhanced Quote Creation", True, f"Enhanced quote created successfully: {quote_id}")
+                    tests_passed += 1
+                else:
+                    self.log_test("Enhanced Quote Creation", False, "Missing quote_id in response", data)
+            else:
+                self.log_test("Enhanced Quote Creation", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Enhanced Quote Creation", False, f"Error: {str(e)}")
+        
+        # Test 2: Verify quote has comprehensive user details
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/quotes", headers=headers)
+            if response.status_code == 200:
+                quotes = response.json()
+                if isinstance(quotes, list) and len(quotes) >= 1:
+                    latest_quote = quotes[0]  # Should be sorted by created_at desc
+                    
+                    # Check comprehensive data fields
+                    required_fields = [
+                        "id", "user_name", "user_email", "company_name", "items", 
+                        "total_amount", "project_name", "intended_use", "delivery_address", 
+                        "billing_address", "company_size", "budget_range", "additional_requirements", 
+                        "status", "created_at"
+                    ]
+                    missing_fields = [field for field in required_fields if field not in latest_quote]
+                    
+                    if not missing_fields:
+                        # Verify initial pricing is 0
+                        initial_total = latest_quote["total_amount"]
+                        if initial_total == 0:
+                            self.log_test("Quote Comprehensive Data", True, f"Quote has all comprehensive fields and initial price is 0")
+                            tests_passed += 1
+                        else:
+                            self.log_test("Quote Comprehensive Data", False, f"Initial total should be 0, got {initial_total}")
+                    else:
+                        self.log_test("Quote Comprehensive Data", False, f"Missing comprehensive fields: {missing_fields}")
+                else:
+                    self.log_test("Quote Comprehensive Data", False, f"No quotes found for verification")
+            else:
+                self.log_test("Quote Comprehensive Data", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Quote Comprehensive Data", False, f"Error: {str(e)}")
+        
+        # Test 3: Admin can view all quotes with comprehensive user details
+        total_tests += 1
+        try:
+            response = self.session.get(f"{self.base_url}/admin/quotes")
+            if response.status_code == 200:
+                admin_quotes = response.json()
+                if isinstance(admin_quotes, list) and len(admin_quotes) >= 1:
+                    sample_quote = admin_quotes[0]
+                    
+                    # Check admin can see comprehensive user details
+                    admin_required_fields = [
+                        "id", "user_name", "user_email", "company_name", "items",
+                        "project_name", "intended_use", "delivery_address", "billing_address",
+                        "company_size", "budget_range", "status"
+                    ]
+                    missing_admin_fields = [field for field in admin_required_fields if field not in sample_quote]
+                    
+                    if not missing_admin_fields:
+                        self.log_test("Admin Quote Management View", True, f"Admin can view {len(admin_quotes)} quotes with comprehensive user details")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Admin Quote Management View", False, f"Admin view missing fields: {missing_admin_fields}")
+                else:
+                    self.log_test("Admin Quote Management View", False, f"Admin quotes endpoint returned invalid data")
+            else:
+                self.log_test("Admin Quote Management View", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Admin Quote Management View", False, f"Error: {str(e)}")
+        
+        # Test 4: Quote approval workflow - admin can approve quotes
+        total_tests += 1
+        try:
+            if quote_id:
+                # Update quote status to approved
+                update_url = f"{self.base_url}/admin/quotes/{quote_id}/status"
+                update_params = {
+                    "status": "approved",
+                    "admin_notes": "Quote approved for processing. Pricing updated with bulk discount."
+                }
+                
+                response = self.session.put(update_url, params=update_params)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "message" in data and "updated successfully" in data["message"].lower():
+                        self.log_test("Quote Approval Workflow", True, "Admin successfully approved quote")
+                        tests_passed += 1
+                    else:
+                        self.log_test("Quote Approval Workflow", False, "Unexpected approval response", data)
+                else:
+                    self.log_test("Quote Approval Workflow", False, f"HTTP {response.status_code}", response.text)
+            else:
+                self.log_test("Quote Approval Workflow", False, "No quote_id available for approval testing")
+        except Exception as e:
+            self.log_test("Quote Approval Workflow", False, f"Error: {str(e)}")
+        
+        # Test 5: Quote status workflow verification
+        total_tests += 1
+        try:
+            if quote_id:
+                # Verify quote status was updated
+                response = self.session.get(f"{self.base_url}/quotes", headers=headers)
+                if response.status_code == 200:
+                    quotes = response.json()
+                    updated_quote = None
+                    for quote in quotes:
+                        if quote["id"] == quote_id:
+                            updated_quote = quote
+                            break
+                    
+                    if updated_quote:
+                        if updated_quote["status"] == "approved" and updated_quote.get("admin_notes"):
+                            self.log_test("Quote Status Workflow", True, f"Quote status updated to '{updated_quote['status']}' with admin notes")
+                            tests_passed += 1
+                        else:
+                            self.log_test("Quote Status Workflow", False, f"Quote status not properly updated: {updated_quote['status']}")
+                    else:
+                        self.log_test("Quote Status Workflow", False, "Could not find updated quote")
+                else:
+                    self.log_test("Quote Status Workflow", False, f"HTTP {response.status_code}")
+            else:
+                self.log_test("Quote Status Workflow", False, "No quote_id available for status verification")
+        except Exception as e:
+            self.log_test("Quote Status Workflow", False, f"Error: {str(e)}")
+        
+        # Test 6: Test quote decline workflow
+        total_tests += 1
+        try:
+            # Create another quote for decline testing
+            decline_quote_data = {
+                "user_id": self.test_user_id,
+                "items": [
+                    {
+                        "product_id": "sample-product-3",
+                        "quantity": 2,
+                        "price": 0,
+                        "notes": "Test product for decline workflow"
+                    }
+                ],
+                "project_name": "Test Decline Project",
+                "intended_use": "testing",
+                "delivery_address": "123 Test St, Test City, TX 75001",
+                "billing_address": "123 Test St, Test City, TX 75001",
+                "company_size": "1-10",
+                "budget_range": "$1000-$5000",
+                "additional_requirements": "This is a test quote for decline workflow"
+            }
+            
+            create_response = self.session.post(f"{self.base_url}/quotes", json=decline_quote_data, headers=headers)
+            if create_response.status_code == 200:
+                decline_quote_id = create_response.json()["quote_id"]
+                
+                # Decline the quote
+                decline_url = f"{self.base_url}/admin/quotes/{decline_quote_id}/status"
+                decline_params = {
+                    "status": "declined",
+                    "admin_notes": "Quote declined due to insufficient information."
+                }
+                
+                decline_response = self.session.put(decline_url, params=decline_params)
+                if decline_response.status_code == 200:
+                    self.log_test("Quote Decline Workflow", True, "Admin successfully declined quote")
+                    tests_passed += 1
+                else:
+                    self.log_test("Quote Decline Workflow", False, f"Decline failed: HTTP {decline_response.status_code}")
+            else:
+                self.log_test("Quote Decline Workflow", False, "Failed to create quote for decline testing")
+        except Exception as e:
+            self.log_test("Quote Decline Workflow", False, f"Error: {str(e)}")
+        
+        return tests_passed == total_tests
+    
     def test_admin_chat_system(self):
         """Test comprehensive Admin Chat System functionality"""
         tests_passed = 0
