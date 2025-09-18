@@ -588,10 +588,13 @@ const HeroSection = ({ brands = [] }) => {
 const TrendingGear = ({ products }) => {
   const { addToCart, user } = useApp();
   const navigate = useNavigate();
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(null);
   
   const handleAddToCart = async (productId) => {
     if (!user) {
-      navigate('/user-login');
+      setSelectedProductId(productId);
+      setShowLoginPopup(true);
       return;
     }
 
@@ -601,6 +604,16 @@ const TrendingGear = ({ products }) => {
     } else {
       alert(result.error || 'Error adding product to cart');
     }
+  };
+
+  const handleLogin = () => {
+    localStorage.setItem('returnToProduct', selectedProductId);
+    navigate('/user-login');
+  };
+
+  const handleRegister = () => {
+    localStorage.setItem('returnToProduct', selectedProductId);
+    navigate('/user-login');
   };
 
   return (
