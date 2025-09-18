@@ -1370,10 +1370,7 @@ const Products = () => {
                       <p className="text-gray-700 mb-4">{product.description.substring(0, 100)}...</p>
                       <div className="flex justify-between items-center mb-4">
                         <div>
-                          <span className="text-2xl font-bold text-red-600">${product.price}</span>
-                          {product.original_price && (
-                            <span className="text-lg line-through text-gray-400 ml-2">${product.original_price}</span>
-                          )}
+                          <span className="text-lg font-semibold text-gray-600">Contact for Price</span>
                         </div>
                         <div className="flex items-center">
                           <span className="text-yellow-400">★</span>
