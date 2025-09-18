@@ -718,7 +718,7 @@ const CustomerTopPicks = ({ products }) => (
             </div>
             <div className="p-4">
               <h3 className="font-semibold mb-2">{product.name}</h3>
-              <p className="text-2xl font-bold text-red-600">${product.price}</p>
+              <p className="text-lg font-semibold text-gray-600">Contact for Price</p>
               <p className="text-sm text-gray-600">{product.review_count} reviews</p>
             </div>
           </div>
