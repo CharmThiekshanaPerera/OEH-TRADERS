@@ -2721,7 +2721,7 @@ class TacticalGearAPITester:
             print(f"  {status} {name}")
         
         print("\n🏢 B2B Features:")
-        b2b_names = ["Enhanced Cart System", "Quote System", "Chat System", "Enhanced Filtering"]
+        b2b_names = ["Enhanced Cart System", "Quote System", "Enhanced Quote System", "Enhanced Quote Pricing", "Chat System", "Enhanced Filtering"]
         for name, result in zip(b2b_names, b2b_tests):
             status = "✅" if result else "❌"
             print(f"  {status} {name}")
