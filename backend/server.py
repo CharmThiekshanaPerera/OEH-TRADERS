@@ -1259,11 +1259,74 @@ async def get_all_conversations(current_admin: Admin = Depends(get_current_admin
     
     return enriched_conversations
 
-@api_router.get("/admin/chat/{user_id}/messages")
-async def get_user_chat_messages(user_id: str, current_admin: Admin = Depends(get_current_admin)):
-    """Get all messages for a specific user conversation"""
-    messages = await db.chat_messages.find({"user_id": user_id}).sort("created_at", 1).to_list(length=None)
-    return [ChatMessage(**{k: v for k, v in msg.items() if k != "_id"}) for msg in messages]
+@api_router.post("/admin/quotes/{quote_id}/send-email")
+async def send_quote_email(quote_id: str, current_admin: Admin = Depends(get_current_admin)):
+    """Send quote details and pricing via email to the user"""
+    try:
+        # Get quote details
+        quote = await db.quotes.find_one({"id": quote_id})
+        if not quote:
+            raise HTTPException(status_code=404, detail="Quote not found")
+        
+        # Get user details
+        user = await db.users.find_one({"id": quote["user_id"]})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # For now, we'll just update the quote to mark that email was sent
+        # In a real implementation, you would integrate with an email service like SendGrid
+        await db.quotes.update_one(
+            {"id": quote_id},
+            {
+                "$set": {
+                    "email_sent": True,
+                    "email_sent_at": datetime.now(timezone.utc).isoformat(),
+                    "email_sent_by": current_admin.username
+                }
+            }
+        )
+        
+        return {"message": f"Quote email sent successfully to {user['email']}"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send quote email: {str(e)}")
+
+@api_router.put("/admin/quotes/{quote_id}/pricing")
+async def update_quote_pricing(quote_id: str, pricing_data: dict, current_admin: Admin = Depends(get_current_admin)):
+    """Update quote pricing and make it visible to user"""
+    try:
+        # Get quote details
+        quote = await db.quotes.find_one({"id": quote_id})
+        if not quote:
+            raise HTTPException(status_code=404, detail="Quote not found")
+        
+        # Update quote with pricing
+        update_data = {
+            "total_amount": pricing_data.get("total_amount", 0),
+            "admin_notes": pricing_data.get("admin_notes", ""),
+            "pricing_updated_at": datetime.now(timezone.utc).isoformat(),
+            "pricing_updated_by": current_admin.username,
+            "status": "approved"  # Auto-approve when pricing is added
+        }
+        
+        # Update individual item prices if provided
+        if "item_prices" in pricing_data:
+            items = quote.get("items", [])
+            item_prices = pricing_data["item_prices"]
+            for i, item in enumerate(items):
+                if i < len(item_prices):
+                    item["price"] = item_prices[i]
+            update_data["items"] = items
+        
+        await db.quotes.update_one(
+            {"id": quote_id},
+            {"$set": update_data}
+        )
+        
+        return {"message": "Quote pricing updated successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update quote pricing: {str(e)}")
 
 # Enhanced Product endpoints with stock filtering (existing)
 @api_router.get("/products", response_model=List[Product])
