@@ -1325,22 +1325,10 @@ const Products = () => {
                 </div>
               </div>
               
-              {/* Dynamic Price Range Slider */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">Price Range</label>
-                <PriceRangeSlider
-                  minPrice={maxPriceRange[0]}
-                  maxPrice={maxPriceRange[1]}
-                  value={priceRange}
-                  onChange={setPriceRange}
-                />
-              </div>
-              
               {/* Clear Filters */}
               <button
                 onClick={() => {
-                  setFilters({ category: '', brand: '', minPrice: '', maxPrice: '', search: '', inStock: '' });
-                  setPriceRange(maxPriceRange);
+                  setFilters({ category: '', brand: '', search: '', inStock: '' });
                 }}
                 className="w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
               >
