@@ -1343,10 +1343,9 @@ const Products = () => {
               <p className="text-gray-600">{products.length} products found</p>
               <select className="border rounded-lg px-3 py-2">
                 <option>Sort by: Featured</option>
-                <option>Price: Low to High</option>
-                <option>Price: High to Low</option>
                 <option>Rating: High to Low</option>
                 <option>Newest First</option>
+                <option>Name: A to Z</option>
               </select>
             </div>
             
