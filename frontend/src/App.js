@@ -1159,21 +1159,11 @@ const Products = () => {
         axios.get(`${API}/categories/with-counts`),
         axios.get(`${API}/brands/with-counts`)
       ]);
+      
       setCategories(categoriesRes.data);
       setBrands(brandsRes.data);
     } catch (error) {
       console.error('Error fetching filters:', error);
-    }
-  };
-
-  const fetchPriceRange = async () => {
-    try {
-      const response = await axios.get(`${API}/products/price-range`);
-      const { min_price, max_price } = response.data;
-      setMaxPriceRange([min_price, max_price]);
-      setPriceRange([min_price, max_price]);
-    } catch (error) {
-      console.error('Error fetching price range:', error);
     }
   };
 
@@ -1182,12 +1172,24 @@ const Products = () => {
   };
 
   const handleAddToCart = async (productId) => {
-    const success = await addToCart(productId);
-    if (success) {
-      alert('Product added to cart!');
-    } else {
-      alert('Error adding product to cart');
+    if (!user) {
+      setSelectedProductId(productId);
+      setShowLoginPopup(true);
+      return;
     }
+
+    // If user is logged in, redirect to quote form instead of adding to cart
+    navigate('/quote-checkout', { state: { productId } });
+  };
+
+  const handleLogin = () => {
+    localStorage.setItem('returnToProduct', selectedProductId);
+    navigate('/user-login');
+  };
+
+  const handleRegister = () => {
+    localStorage.setItem('returnToProduct', selectedProductId);
+    navigate('/user-login');
   };
 
   return (
