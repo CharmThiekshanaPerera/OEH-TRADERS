@@ -982,6 +982,13 @@ const NewArrivals = ({ products }) => {
           </Link>
         </div>
       </div>
+      
+      <LoginRequiredPopup
+        isOpen={showLoginPopup}
+        onClose={() => setShowLoginPopup(false)}
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+      />
     </section>
   );
 };
