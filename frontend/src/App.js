@@ -1126,6 +1126,8 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
+  const [maxPriceRange, setMaxPriceRange] = useState([0, 1000]);
+  const [priceRange, setPriceRange] = useState([0, 1000]);
   const { addToCart, user } = useApp();
   const navigate = useNavigate();
 
