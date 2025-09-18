@@ -2991,6 +2991,20 @@ const AdminDashboard = () => {
                               </button>
                             </div>
                           )}
+                          
+                          {quote.status === 'approved' && (
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => sendQuoteEmail(quote.id, quote.user_email)}
+                                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                              >
+                                📧 Email Quote
+                              </button>
+                              <button className="text-green-600 hover:text-green-700 text-sm font-medium">
+                                💬 Chat with User
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
