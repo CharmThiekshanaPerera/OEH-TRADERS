@@ -1117,24 +1117,21 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
-  const [priceRange, setPriceRange] = useState([0, 1000]);
-  const [maxPriceRange, setMaxPriceRange] = useState([0, 3000]);
   const [filters, setFilters] = useState({
     category: '',
     brand: '',
-    minPrice: '',
-    maxPrice: '',
     search: '',
     inStock: ''
   });
   const [loading, setLoading] = useState(true);
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(null);
   const { addToCart, user } = useApp();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
     fetchFilters();
-    fetchPriceRange();
   }, [filters]);
 
   const fetchProducts = async () => {
@@ -1142,16 +1139,10 @@ const Products = () => {
       const params = new URLSearchParams();
       Object.keys(filters).forEach(key => {
         if (filters[key]) {
-          const paramKey = key === 'minPrice' ? 'min_price' : 
-                          key === 'maxPrice' ? 'max_price' : 
-                          key === 'inStock' ? 'in_stock' : key;
+          const paramKey = key === 'inStock' ? 'in_stock' : key;
           params.append(paramKey, filters[key]);
         }
       });
-      
-      // Add price range from slider
-      if (priceRange[0] > maxPriceRange[0]) params.append('min_price', priceRange[0]);
-      if (priceRange[1] < maxPriceRange[1]) params.append('max_price', priceRange[1]);
       
       const response = await axios.get(`${API}/products?${params}`);
       setProducts(response.data);
