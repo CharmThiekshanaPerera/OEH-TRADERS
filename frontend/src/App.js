@@ -2756,6 +2756,30 @@ const AdminDashboard = () => {
     }
   };
 
+  const sendAdminMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedConversation) return;
+
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      const headers = { Authorization: `Bearer ${adminToken}` };
+      
+      await axios.post(`${API}/admin/chat/send`, {
+        user_id: selectedConversation.user_id,
+        sender_type: 'admin',
+        sender_name: `Admin (${admin.username})`,
+        message: newMessage
+      }, { headers });
+
+      setNewMessage('');
+      fetchChatMessages(selectedConversation.user_id);
+      fetchConversations(); // Refresh conversations list
+    } catch (error) {
+      console.error('Error sending admin message:', error);
+      alert('Error sending message');
+    }
+  };
+
   const sendQuoteEmail = async (quoteId, userEmail) => {
     try {
       const adminToken = localStorage.getItem('admin_token');
