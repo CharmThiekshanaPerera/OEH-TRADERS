@@ -2545,7 +2545,11 @@ const UserProfile = () => {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Total Value</p>
-                          <p className="font-medium text-lg">${quote.total_amount.toFixed(2)}</p>
+                          {quote.status === 'approved' ? (
+                            <p className="font-medium text-lg text-green-600">${quote.total_amount.toFixed(2)}</p>
+                          ) : (
+                            <p className="font-medium text-gray-500">Pending Admin Approval</p>
+                          )}
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Items</p>
