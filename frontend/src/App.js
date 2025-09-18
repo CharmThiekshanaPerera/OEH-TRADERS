@@ -753,6 +753,8 @@ const NewArrivals = ({ products }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { addToCart, user } = useApp();
   const navigate = useNavigate();
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(null);
   
   const itemsPerView = {
     mobile: 1,
@@ -790,7 +792,8 @@ const NewArrivals = ({ products }) => {
   
   const handleAddToCart = async (productId) => {
     if (!user) {
-      navigate('/user-login');
+      setSelectedProductId(productId);
+      setShowLoginPopup(true);
       return;
     }
 
@@ -800,6 +803,16 @@ const NewArrivals = ({ products }) => {
     } else {
       alert(result.error || 'Error adding product to cart');
     }
+  };
+
+  const handleLogin = () => {
+    localStorage.setItem('returnToProduct', selectedProductId);
+    navigate('/user-login');
+  };
+
+  const handleRegister = () => {
+    localStorage.setItem('returnToProduct', selectedProductId);
+    navigate('/user-login');
   };
   
   if (!products || products.length === 0) {
