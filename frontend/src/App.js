@@ -650,13 +650,7 @@ const DepartmentOfDeals = ({ deals }) => (
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-2">{product.name}</h3>
               <div className="flex items-center space-x-2 mb-4">
-                <span className="text-2xl font-bold">${product.price}</span>
-                {product.original_price && (
-                  <span className="text-lg line-through text-gray-400">${product.original_price}</span>
-                )}
-                <span className="bg-red-500 px-2 py-1 rounded text-sm">
-                  SAVE ${(product.original_price - product.price).toFixed(2)}
-                </span>
+                <span className="text-lg font-semibold text-gray-200">Special Deal - Contact for Price</span>
               </div>
             </div>
           </div>
