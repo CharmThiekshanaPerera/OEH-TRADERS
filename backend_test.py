@@ -2652,6 +2652,12 @@ class TacticalGearAPITester:
         # Test enhanced quote system with comprehensive data model
         enhanced_quote_ok = self.test_enhanced_quote_system()
         
+        print("\n💰 Testing Enhanced Quote Pricing System...")
+        print("-" * 50)
+        
+        # Test enhanced quote-based pricing system with email and pricing endpoints
+        enhanced_quote_pricing_ok = self.test_enhanced_quote_pricing_system()
+        
         print("\n💬 Testing Chat System...")
         print("-" * 50)
         
