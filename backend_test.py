@@ -42,7 +42,7 @@ class TacticalGearAPITester:
             response = self.session.get(f"{self.base_url}/")
             if response.status_code == 200:
                 data = response.json()
-                if "message" in data and "TacticalGear API" in data["message"]:
+                if "message" in data and ("TacticalGear API" in data["message"] or "OEH TRADERS API" in data["message"]):
                     self.log_test("Health Check", True, "API is responding correctly")
                     return True
                 else:
