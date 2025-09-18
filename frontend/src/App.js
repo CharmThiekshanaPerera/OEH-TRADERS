@@ -1394,7 +1394,7 @@ const Products = () => {
                           disabled={!product.in_stock}
                           className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
-                          {product.in_stock ? 'Add to Cart' : 'Out of Stock'}
+                          {product.in_stock ? 'Request Quote' : 'Out of Stock'}
                         </button>
                         <button className="px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
                           ♡
