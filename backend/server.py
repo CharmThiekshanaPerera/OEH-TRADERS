@@ -25,16 +25,41 @@ db = client[os.environ['DB_NAME']]
 # Create the main app without a prefix
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # your frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
 # JWT Configuration
-JWT_SECRET = "your-secret-key-here"  # In production, use environment variable
+JWT_SECRET = os.environ.get("JWT_SECRET", "supersecretkey")
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRATION_HOURS = 24
+JWT_EXP_HOURS = 24
 
 security = HTTPBearer()
+def create_jwt_token(data: dict):
+    expire = datetime.utcnow() + timedelta(hours=JWT_EXP_HOURS)
+    payload = data.copy()
+    payload.update({"exp": expire})
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return token
 
+def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+JWT_EXPIRATION_HOURS = 24
+    
 # Enhanced Models
 class Product(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

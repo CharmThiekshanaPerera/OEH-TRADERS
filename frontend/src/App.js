@@ -1,9 +1,11 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from "react";
 import "./App.css";
+import { User as UserIcon } from "lucide-react";
+
 import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:8000';
 const API = `${BACKEND_URL}/api`;
 
 // Context for Authentication and Cart
@@ -278,8 +280,8 @@ const Navigation = () => {
             {user ? (
               <div className="relative group">
                 <button className="flex items-center space-x-2 hover:text-red-400">
-                  <span>{user.first_name} {user.last_name}</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* <span>{user.first_name} {user.last_name}</span> */}
+                <UserIcon className="w-6 h-6" />                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -1467,90 +1469,83 @@ const Products = () => {
 const UserLogin = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    first_name: '',
-    last_name: '',
-    company_name: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    zip_code: '',
-    country: 'United States'
+    email: "",
+    password: "",
+    first_name: "",
+    last_name: "",
+    company_name: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zip_code: "",
+    country: "United States",
   });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const { loginUser, registerUser } = useApp();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
+    setMessage("");
 
     try {
       if (isLogin) {
         const result = await loginUser(formData.email, formData.password);
         if (result.success) {
-          // Check if user should be redirected to a specific product for quote
-          const returnToProduct = localStorage.getItem('returnToProduct');
-          if (returnToProduct) {
-            localStorage.removeItem('returnToProduct');
-            navigate('/quote-checkout', { state: { productId: returnToProduct } });
-          } else {
-            navigate('/');
-          }
+          // Redirect to homepage or a stored route
+          const returnTo = localStorage.getItem("returnTo") || "/";
+          localStorage.removeItem("returnTo");
+          navigate(returnTo);
         } else {
           setMessage(result.error);
         }
       } else {
         const result = await registerUser(formData);
         if (result.success) {
-          // Auto-login after successful registration
+          // Auto-login after registration
           const loginResult = await loginUser(formData.email, formData.password);
           if (loginResult.success) {
-            const returnToProduct = localStorage.getItem('returnToProduct');
-            if (returnToProduct) {
-              localStorage.removeItem('returnToProduct');
-              navigate('/quote-checkout', { state: { productId: returnToProduct } });
-            } else {
-              navigate('/');
-            }
+            const returnTo = localStorage.getItem("returnTo") || "/";
+            localStorage.removeItem("returnTo");
+            navigate(returnTo);
           } else {
-            setMessage('Registration successful! Please login.');
+            setMessage("Registration successful! Please login.");
             setIsLogin(true);
           }
         } else {
           setMessage(result.error);
         }
       }
-    } catch (error) {
-      setMessage('An error occurred. Please try again.');
+    } catch (err) {
+      setMessage("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 pt-16">
       <div className="max-w-md w-full mx-4">
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h2 className="text-3xl font-bold text-center mb-8">
-            {isLogin ? 'User Login' : 'Create Account'}
+            {isLogin ? "User Login" : "Create Account"}
           </h2>
-          
+
           {message && (
-            <div className={`mb-4 p-3 rounded ${
-              message.includes('successful') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-            }`}>
+            <div
+              className={`mb-4 p-3 rounded ${
+                message.includes("successful")
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+            >
               {message}
             </div>
           )}
@@ -1565,7 +1560,6 @@ const UserLogin = () => {
               required
               className="w-full p-3 border rounded-lg"
             />
-            
             <input
               type="password"
               name="password"
@@ -1598,7 +1592,6 @@ const UserLogin = () => {
                     className="w-full p-3 border rounded-lg"
                   />
                 </div>
-                
                 <input
                   type="text"
                   name="company_name"
@@ -1607,7 +1600,6 @@ const UserLogin = () => {
                   onChange={handleChange}
                   className="w-full p-3 border rounded-lg"
                 />
-                
                 <input
                   type="tel"
                   name="phone"
@@ -1616,7 +1608,6 @@ const UserLogin = () => {
                   onChange={handleChange}
                   className="w-full p-3 border rounded-lg"
                 />
-                
                 <input
                   type="text"
                   name="address"
@@ -1625,7 +1616,6 @@ const UserLogin = () => {
                   onChange={handleChange}
                   className="w-full p-3 border rounded-lg"
                 />
-                
                 <div className="grid grid-cols-2 gap-4">
                   <input
                     type="text"
@@ -1644,7 +1634,6 @@ const UserLogin = () => {
                     className="w-full p-3 border rounded-lg"
                   />
                 </div>
-                
                 <input
                   type="text"
                   name="zip_code"
@@ -1661,7 +1650,7 @@ const UserLogin = () => {
               disabled={loading}
               className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 disabled:bg-gray-400"
             >
-              {loading ? 'Processing...' : (isLogin ? 'Login' : 'Create Account')}
+              {loading ? "Processing..." : isLogin ? "Login" : "Create Account"}
             </button>
           </form>
 
@@ -1670,10 +1659,10 @@ const UserLogin = () => {
               onClick={() => setIsLogin(!isLogin)}
               className="text-red-600 hover:text-red-700"
             >
-              {isLogin ? 'Need an account? Sign up' : 'Already have an account? Login'}
+              {isLogin ? "Need an account? Sign up" : "Already have an account? Login"}
             </button>
           </div>
-          
+
           <div className="mt-4 text-center">
             <Link to="/dealer-login" className="text-sm text-gray-600 hover:text-gray-800">
               Are you a dealer? Click here for dealer portal
