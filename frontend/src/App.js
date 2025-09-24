@@ -1424,9 +1424,25 @@ const Products = () => {
                         >
                           {product.in_stock ? 'Request Quote' : 'Out of Stock'}
                         </button>
-                        <button className="px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
-                          ♡
-                        </button>
+                        {user ? (
+                          <button 
+                            onClick={() => handleAddToCart(product.id)}
+                            className="px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            title="Add to Cart"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9M6 19h9" />
+                            </svg>
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => handleAddToCart(product.id)}
+                            className="px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                            title="Login to Add to Cart"
+                          >
+                            ♡
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
