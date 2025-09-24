@@ -261,7 +261,7 @@ const Navigation = () => {
 
             {/* Cart */}
             <button 
-              onClick={() => user ? navigate('/cart') : navigate('/user-login')}
+              onClick={() => user ? navigate('/quote-checkout') : navigate('/user-login')}
               className="relative hover:text-red-400 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
