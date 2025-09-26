@@ -2442,7 +2442,7 @@ const UserProfile = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/user-login');
+      navigate("/user-login");
       return;
     }
     fetchQuotes();
@@ -2450,13 +2450,13 @@ const UserProfile = () => {
 
   const fetchQuotes = async () => {
     try {
-      const userToken = localStorage.getItem('user_token');
+      const userToken = localStorage.getItem("user_token");
       const response = await axios.get(`${API}/quotes`, {
-        headers: { Authorization: `Bearer ${userToken}` }
+        headers: { Authorization: `Bearer ${userToken}` },
       });
       setQuotes(response.data);
     } catch (error) {
-      console.error('Error fetching quotes:', error);
+      console.error("Error fetching quotes:", error);
     } finally {
       setLoading(false);
     }
@@ -2464,11 +2464,16 @@ const UserProfile = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'reviewed': return 'bg-blue-100 text-blue-800';
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'declined': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "reviewed":
+        return "bg-blue-100 text-blue-800";
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "declined":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -2480,7 +2485,7 @@ const UserProfile = () => {
     <div className="min-h-screen bg-gray-50 pt-16">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">User Profile</h1>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Information */}
           <div className="lg:col-span-1">
@@ -2488,38 +2493,53 @@ const UserProfile = () => {
               <div className="text-center mb-6">
                 <div className="w-20 h-20 bg-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
                   <span className="text-2xl font-bold text-white">
-                    {user.first_name[0]}{user.last_name[0]}
+                    {user.first_name[0]}
+                    {user.last_name[0]}
                   </span>
                 </div>
-                <h2 className="text-xl font-semibold">{user.first_name} {user.last_name}</h2>
+                <h2 className="text-xl font-semibold">
+                  {user.first_name} {user.last_name}
+                </h2>
                 <p className="text-gray-600">{user.email}</p>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Company</label>
-                  <p className="text-gray-900">{user.company_name || 'Not specified'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Phone</label>
-                  <p className="text-gray-900">{user.phone || 'Not specified'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Address</label>
+                  <label className="text-sm font-medium text-gray-500">
+                    Company
+                  </label>
                   <p className="text-gray-900">
-                    {user.address ? `${user.address}, ${user.city}, ${user.state} ${user.zip_code}` : 'Not specified'}
+                    {user.company_name || "Not specified"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Phone
+                  </label>
+                  <p className="text-gray-900">
+                    {user.phone || "Not specified"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Address
+                  </label>
+                  <p className="text-gray-900">
+                    {user.address
+                      ? `${user.address}, ${user.city}, ${user.state} ${user.zip_code}`
+                      : "Not specified"}
                   </p>
                 </div>
               </div>
-              
+
               <div className="mt-6 space-y-2">
-                <Link 
-                  to="/chat" 
+                <Link
+                  to="/chat"
                   className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 block text-center"
                 >
                   💬 Chat with Support
                 </Link>
-                <button 
+                <button
                   onClick={logout}
                   className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300"
                 >
@@ -2533,14 +2553,14 @@ const UserProfile = () => {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold mb-6">Quote Requests</h2>
-              
+
               {loading ? (
                 <div className="text-center py-8">Loading quotes...</div>
               ) : quotes.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-600 mb-4">No quotes submitted yet</p>
-                  <Link 
-                    to="/products" 
+                  <Link
+                    to="/products"
                     className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700"
                   >
                     Browse Products
@@ -2549,66 +2569,120 @@ const UserProfile = () => {
               ) : (
                 <div className="space-y-6">
                   {quotes.map((quote) => (
-                    <div key={quote.id} className="border rounded-lg p-6">
+                    <div
+                      key={quote.id}
+                      className="border rounded-xl p-6 relative bg-white shadow-sm"
+                    >
+                      {/* Header */}
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h3 className="text-lg font-semibold">{quote.project_name}</h3>
-                          <p className="text-gray-600">
-                            Submitted: {new Date(quote.created_at).toLocaleDateString()}
+                          {/* Project name (UPPERCASE now) */}
+                          <h3 className="text-m uppercase font-semibold text-gray-800">
+                            {quote.project_name}
+                          </h3>
+
+                          {/* Submitted date */}
+                          <p className="text-xs uppercase text-gray-500 mt-1">
+                            Submitted:{" "}
+                            <span className="font-medium text-gray-700">
+                              {new Date(quote.created_at).toLocaleDateString()}
+                            </span>
                           </p>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(quote.status)}`}>
-                          {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                            quote.status
+                          )}`}
+                        >
+                          {quote.status.charAt(0).toUpperCase() +
+                            quote.status.slice(1)}
                         </span>
                       </div>
-                      
+
+                      {/* Basic info */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <p className="text-sm text-gray-600">Intended Use</p>
-                          <p className="font-medium">{quote.intended_use.replace('_', ' ').toUpperCase()}</p>
-                        </div>
-                        <div>
-                          {quote.status === 'approved' && quote.total_amount ? (
-                          <p className="font-medium text-lg text-green-600">
-                                ${quote.total_amount.toFixed(2)}
+                          <p className="text-xs uppercase text-gray-500 tracking-wide">
+                            Intended Use
                           </p>
-                          ) : (
-                          <p className="font-medium text-gray-500">Pending Admin Approval</p>
-                          )}
+                          <p className="text-m font-semibold text-gray-800">
+                            {quote.intended_use
+                              ?.replace("_", " ")
+                              .toUpperCase()}
+                          </p>
+                        </div>
+                        {/* You can add more info here if needed */}
+                      </div>
 
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Items</p>
-                          <p className="font-medium">{quote.items.length} products</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Delivery Date</p>
-                          <p className="font-medium">
-                            {quote.delivery_date ? new Date(quote.delivery_date).toLocaleDateString() : 'Flexible'}
-                          </p>
+                      {/* Products */}
+                      <div className="mb-4">
+                        <p className="text-sm text-gray-600 mb-2 font-medium">
+                          Products Requested
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {quote.items.map((item, idx) => {
+                            // Using notes as product label
+                            const productLabel =
+                              item.notes || "No Product Name";
+
+                            return (
+                              <div
+                                key={idx}
+                                className="bg-gray-50 p-3 rounded-xl flex flex-col shadow-sm"
+                              >
+                                {/* Product name */}
+                                <span className="font-medium text-sm text-gray-800">
+                                  {productLabel}
+                                </span>
+
+                                {/* Quantity */}
+                                <span className="text-gray-600 text-xs mt-1">
+                                  Qty: {item.quantity}
+                                </span>
+                              </div>
+                            );
+                          })}
+
+                          {/* Pending / Total Amount Card */}
+                          <div className="bg-yellow-50 p-3 rounded-xl flex items-center justify-center text-center shadow-sm">
+                            {quote.status === "approved" &&
+                            quote.total_amount ? (
+                              <p className="text-green-600 font-semibold text-sm">
+                                Total Amount: ${quote.total_amount.toFixed(2)}
+                              </p>
+                            ) : (
+                              <p className="text-gray-500 font-medium text-sm">
+                                Pending Admin Approval
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      
+
+                      {/* Admin Notes */}
                       {quote.admin_notes && (
-                        <div className="bg-blue-50 p-4 rounded-lg">
-                          <p className="text-sm font-medium text-blue-800 mb-1">Admin Notes:</p>
-                          <p className="text-blue-700">{quote.admin_notes}</p>
+                        <div className="bg-blue-50 p-3 rounded-xl mb-4 shadow-sm">
+                          <p className="text-sm font-medium text-blue-800 mb-1">
+                            Admin Notes:
+                          </p>
+                          <p className="text-blue-700 text-sm">
+                            {quote.admin_notes}
+                          </p>
                         </div>
                       )}
-                      
-                      <div className="mt-4 flex space-x-2">
-                        <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                          View Details
-                        </button>
-                        {quote.status === 'approved' && (
-                          <Link 
-                            to="/chat" 
-                            className="text-green-600 hover:text-green-700 text-sm font-medium"
+
+                      {/* Discuss Order button bottom-right */}
+                      {quote.status === "approved" && (
+                        <div className="flex justify-end">
+                          <Link
+                            to="/chat"
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
                           >
                             Discuss Order
                           </Link>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -2976,75 +3050,123 @@ const AdminDashboard = () => {
               </div>
 
               {/* Recent Quotes */}
-              <div className="bg-white rounded-lg shadow">
+              <div className="bg-white rounded-xl shadow-lg">
                 <div className="p-6 border-b">
-                  <h2 className="text-xl font-semibold">Recent Quote Requests</h2>
-                </div>
-                <div className="p-6">
-                  {loading ? (
-                    <div className="text-center">Loading...</div>
-                  ) : allQuotes.length === 0 ? (
-                    <p className="text-gray-500">No quote requests</p>
-                  ) : (
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
-                      {allQuotes.slice(0, 5).map((quote) => (
-                        <div key={quote.id} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h3 className="font-semibold">{quote.project_name}</h3>
-                              <p className="text-sm text-gray-600">{quote.user_name} - {quote.user_email}</p>
-                            </div>
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              quote.status === 'approved' ? 'bg-green-100 text-green-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {quote.status.toUpperCase()}
-                            </span>
-                          </div>
-                          <p className="text-sm mb-2">Total: ${quote.total_amount ? quote.total_amount.toFixed(2) : '—'}</p>
-                          <p className="text-sm mb-3">{quote.intended_use.replace('_', ' ').toUpperCase()}</p>
-                          
-                          {quote.status === 'pending' && (
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => updateQuoteStatus(quote.id, 'approved', 'Approved for processing')}
-                                className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => updateQuoteStatus(quote.id, 'declined', 'Unable to fulfill at this time')}
-                                className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
-                              >
-                                Decline
-                              </button>
-                            </div>
-                          )}
-                          
-                          {quote.status === 'approved' && (
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => sendQuoteEmail(quote.id, quote.user_email)}
-                                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-                              >
-                                📧 Email Quote
-                              </button>
-                              <button className="text-green-600 hover:text-green-700 text-sm font-medium">
-                                💬 Chat with User
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <h2 className="text-2xl font-semibold">Recent Quote Requests</h2>
               </div>
-            </div>
-          </>
-        )}
 
+             <div className="p-6">
+             {loading ? (
+             <div className="text-center py-8 text-gray-500">Loading...</div>
+              ) : allQuotes.length === 0 ? (
+             <p className="text-gray-500 text-center">No quote requests</p>
+             ) : (
+            <div className="space-y-5 max-h-[520px] overflow-y-auto">
+        {allQuotes.slice(0, 5).map((quote) => (
+          <div
+            key={quote.id}
+            className="border rounded-lg p-4 flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200"
+          >
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
+              <div>
+                <h3 className="font-semibold text-lg">{quote.project_name}</h3>
+                <p className="text-sm text-gray-600">
+                  {quote.user_name} - {quote.user_email}
+                </p>
+              </div>
+              <span
+                className={`mt-2 sm:mt-0 px-3 py-1 rounded-full text-xs font-medium ${
+                  quote.status === 'pending'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : quote.status === 'approved'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-red-100 text-red-800'
+                }`}
+              >
+                {quote.status.toUpperCase()}
+              </span>
+            </div>
+
+            {/* Total & Intended Use */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3">
+              <p className="text-sm font-medium">
+                Total: ${quote.total_amount ? quote.total_amount.toFixed(2) : '—'}
+              </p>
+              <p className="text-sm text-gray-600 mt-1 sm:mt-0">
+                {quote.intended_use.replace('_', ' ').toUpperCase()}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {quote.status === 'pending' && (
+                <>
+                  <button
+                    onClick={() =>
+                      updateQuoteStatus(quote.id, 'approved', 'Approved for processing')
+                    }
+                    className="bg-green-600 text-white px-4 py-1 rounded-md text-sm hover:bg-green-700 transition-colors"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() =>
+                      updateQuoteStatus(quote.id, 'declined', 'Unable to fulfill at this time')
+                    }
+                    className="bg-red-600 text-white px-4 py-1 rounded-md text-sm hover:bg-red-700 transition-colors"
+                  >
+                    Decline
+                  </button>
+                </>
+              )}
+              {quote.status === 'approved' && (
+                <>
+                  <button
+                    onClick={() => sendQuoteEmail(quote.id, quote.user_email)}
+                    className="bg-blue-600 text-white px-4 py-1 rounded-md text-sm hover:bg-blue-700 transition-colors"
+                  >
+                    📧 Email Quote
+                  </button>
+                  <button className="text-green-600 hover:text-green-700 text-sm font-medium">
+                    💬 Chat with User
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Requested Items Block with fixed height */}
+            <div className="mt-2 border rounded-md p-2 bg-gray-50 shadow-inner overflow-y-auto h-20 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+              <h4 className="text-sm font-semibold mb-2">Requested Items</h4>
+              {quote.items.map((item, idx) => {
+                const [productName, brandName] = item.notes.includes(" - ")
+                  ? item.notes.split(" - ")
+                  : [item.notes, ""];
+                const price = item.price != null ? Number(item.price).toFixed(2) : "—";
+
+                return (
+                  <div key={idx} className="flex justify-between text-sm mb-1">
+                    <div>
+                      <p className="font-medium">{productName}</p>
+                      {brandName && <p className="text-gray-500 text-xs">{brandName}</p>}
+                    </div>
+                    <div className="text-right">
+                      <p>Qty: {item.quantity}</p>
+                      <p>${price}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+ </div>
+</div>
+</>
+)}
         {/* Chat Management Tab */}
         {activeTab === 'chat' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-96">

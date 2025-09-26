@@ -1140,18 +1140,21 @@ async def remove_from_cart(product_id: str, current_user: User = Depends(get_cur
 # Quote System Endpoints
 @api_router.post("/quotes")
 async def create_quote(quote_data: QuoteCreate, current_user: User = Depends(get_current_user)):
-    # Compute total amount automatically
     total_amount = 0
+    # Assign actual product price to each item
     for item in quote_data.items:
         product = await db.products.find_one({"id": item.product_id})
         if product and "price" in product:
+            item.price = product["price"]  # <-- assign actual price
             total_amount += product["price"] * item.quantity
+        else:
+            item.price = 0  # fallback if product not found
     
-    # Create quote
+    # Create quote with updated items
     quote = Quote(
         user_id=current_user.id,
-        items=quote_data.items,
-        total_amount=total_amount,
+        items=quote_data.items,  # now contains correct prices
+        total_amount=total_amount,  # use total calculated above
         project_name=quote_data.project_name,
         intended_use=quote_data.intended_use,
         delivery_date=quote_data.delivery_date,
