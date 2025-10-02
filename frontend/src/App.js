@@ -2568,12 +2568,14 @@ const UserProfile = () => {
                           <p className="font-medium">{quote.intended_use.replace('_', ' ').toUpperCase()}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Total Value</p>
-                          {quote.status === 'approved' ? (
-                            <p className="font-medium text-lg text-green-600">${quote.total_amount.toFixed(2)}</p>
+                          {quote.status === 'approved' && quote.total_amount ? (
+                          <p className="font-medium text-lg text-green-600">
+                                ${quote.total_amount.toFixed(2)}
+                          </p>
                           ) : (
-                            <p className="font-medium text-gray-500">Pending Admin Approval</p>
+                          <p className="font-medium text-gray-500">Pending Admin Approval</p>
                           )}
+
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Items</p>
@@ -3000,7 +3002,7 @@ const AdminDashboard = () => {
                               {quote.status.toUpperCase()}
                             </span>
                           </div>
-                          <p className="text-sm mb-2">Total: ${quote.total_amount.toFixed(2)}</p>
+                          <p className="text-sm mb-2">Total: ${quote.total_amount ? quote.total_amount.toFixed(2) : '—'}</p>
                           <p className="text-sm mb-3">{quote.intended_use.replace('_', ' ').toUpperCase()}</p>
                           
                           {quote.status === 'pending' && (

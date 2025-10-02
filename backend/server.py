@@ -266,7 +266,7 @@ class QuoteResponse(BaseModel):
     user_email: str
     company_name: Optional[str]
     items: List[QuoteItem]
-    total_amount: float
+    total_amount: float = 0.0
     project_name: str
     intended_use: str
     delivery_date: Optional[datetime]
@@ -1140,8 +1140,12 @@ async def remove_from_cart(product_id: str, current_user: User = Depends(get_cur
 # Quote System Endpoints
 @api_router.post("/quotes")
 async def create_quote(quote_data: QuoteCreate, current_user: User = Depends(get_current_user)):
-    # Calculate total amount
-    total_amount = sum(item.quantity * item.price for item in quote_data.items)
+    # Compute total amount automatically
+    total_amount = 0
+    for item in quote_data.items:
+        product = await db.products.find_one({"id": item.product_id})
+        if product and "price" in product:
+            total_amount += product["price"] * item.quantity
     
     # Create quote
     quote = Quote(
@@ -1172,6 +1176,11 @@ async def get_user_quotes(current_user: User = Depends(get_current_user)):
     quote_responses = []
     for quote in quotes:
         quote_dict = {k: v for k, v in quote.items() if k != "_id"}
+        
+        # Hide total if not approved
+        if quote_dict.get("status") != "approved":
+            quote_dict["total_amount"] = 0  # or None
+
         quote_responses.append(QuoteResponse(
             **quote_dict,
             user_name=f"{current_user.first_name} {current_user.last_name}",
@@ -1184,15 +1193,11 @@ async def get_user_quotes(current_user: User = Depends(get_current_user)):
 # Admin Endpoints for Quote Management
 @api_router.get("/admin/quotes", response_model=List[QuoteResponse])
 async def get_all_quotes():
-    # In a real application, you'd add admin authentication here
     quotes = await db.quotes.find().sort("created_at", -1).to_list(length=None)
-    
     quote_responses = []
     for quote in quotes:
-        # Get user details
         user = await db.users.find_one({"id": quote["user_id"]})
-        quote_dict = {k: v for k, v in quote.items() if k != "_id"}
-        
+        quote_dict = {k: v for k, v in quote.items() if k != "_id"}  # ✅ keeps total_amount too
         if user:
             quote_responses.append(QuoteResponse(
                 **quote_dict,
@@ -1200,24 +1205,20 @@ async def get_all_quotes():
                 user_email=user["email"],
                 company_name=user.get("company_name")
             ))
-    
     return quote_responses
 
 @api_router.put("/admin/quotes/{quote_id}/status")
-async def update_quote_status(quote_id: str, status: str, admin_notes: Optional[str] = None):
-    # In a real application, you'd add admin authentication here
-    update_data = {"status": status, "updated_at": datetime.now(timezone.utc)}
-    if admin_notes:
-        update_data["admin_notes"] = admin_notes
-    
-    result = await db.quotes.update_one(
-        {"id": quote_id},
-        {"$set": update_data}
-    )
-    
-    if result.matched_count == 0:
+async def update_quote_status(quote_id: str, status: str, admin_notes: str = ""):
+    quote = await db.quotes.find_one({"id": quote_id})
+    if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
-    
+
+    update_data = {
+        "status": status,
+        "admin_notes": admin_notes
+    }
+
+    await db.quotes.update_one({"id": quote_id}, {"$set": update_data})
     return {"message": "Quote status updated successfully"}
 
 # Chat System Endpoints
